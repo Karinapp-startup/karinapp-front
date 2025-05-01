@@ -10,24 +10,6 @@ Sistema de gestión de denuncias desarrollado con Next.js 14, TypeScript y Tailw
 - 👤 Gestión de usuarios
 - 🎨 UI moderna con Tailwind CSS y Shadcn/ui
 
-## Estructura del Proyecto
-bash
-src/
-├── app/ # Páginas de Next.js
-├── components/
-│ ├── common/ # Componentes compartidos
-│ │ ├── sidebar/ # Navegación principal
-│ │ ├── header/ # Encabezado de la aplicación
-│ │ ├── layout/ # Layout principal
-│ │ └── card/ # Componente de tarjeta
-│ ├── complaints/ # Módulo de denuncias
-│ │ ├── components/ # Componentes específicos
-│ │ ├── data/ # Datos mock
-│ │ ├── types/ # Tipos TypeScript
-│ │ └── utils/ # Utilidades
-│ └── ui/ # Componentes UI base
-└── styles/ # Estilos globales
-
 
 ## Tecnologías
 
