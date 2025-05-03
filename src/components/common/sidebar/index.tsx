@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const menuItems = [
-  { icon: FileTextIcon, label: "Denuncias", href: "/complaints" },
+  { icon: FileTextIcon, label: "Denuncias", href: "/" },
 ];
 
 export const Sidebar = () => {

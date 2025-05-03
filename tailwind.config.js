@@ -51,6 +51,11 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      animation: {
+        'spin': 'spin 1s linear infinite',
+        'ping': 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'pulse': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

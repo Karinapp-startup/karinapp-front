@@ -93,6 +93,16 @@ const nextConfig = {
         }
         return config
     },
+
+    async redirects() {
+        return [
+            {
+                source: '/denuncias/nueva',
+                destination: '/complaints/new',
+                permanent: true,
+            }
+        ]
+    },
 }
 
 module.exports = nextConfig 
