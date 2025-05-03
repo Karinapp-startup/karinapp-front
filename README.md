@@ -70,6 +70,5 @@ En desarrollo activo. Versión actual: 0.1.0
 
 ## Licencia
 
-<<<<<<< HEAD
 MIT
 
