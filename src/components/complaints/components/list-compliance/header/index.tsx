@@ -59,8 +59,8 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Input
-              placeholder="Busca por denuncia, nombre, empresa o cualquier dato"
-              className="w-96"
+              placeholder="Busca por ID de denuncia o empleador"
+              className="w-96 placeholder-gray-500 border-gray-500"
               value={searchTerm}
               onChange={handleSearch}
             />
@@ -83,10 +83,9 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
             </Button>
             <Button
               variant="default"
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleNewComplaint}
             >
-              <Plus className="h-4 w-4 mr-2" />
               Agregar denuncia
             </Button>
           </div>

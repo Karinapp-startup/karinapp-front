@@ -27,7 +27,7 @@ export interface Activity {
 }
 
 export type DueStatus = 'onTime' | 'warning' | 'overdue';
-export type StatusType = 'Inicio de investigacion' | 'Finalizada' | 'Desarrollo de investigacion' | 'Esperando DT' | 'Con observaciones' | 'Adopcion de medidas';
+export type StatusType = 'Recibida' | 'Aviso de Inicio Investigación' | 'Derivada a DT' | 'Desarrollo Investigación' | 'Esperando DT' | 'Observaciones DT' | 'Adopción de Sanciones' | 'Finalizada';
 
 export type StatusConfig = Record<StatusType, {
   color: string;
