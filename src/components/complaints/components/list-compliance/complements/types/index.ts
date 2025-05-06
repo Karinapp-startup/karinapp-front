@@ -26,11 +26,10 @@ export interface Activity {
 }
 
 export type DueStatus = 'onTime' | 'warning' | 'overdue';
-export type StatusType = 'Ingresada' | 'Finalizada' | 'Derivada' | 'Incompleta' | 'Revisada';
+export type StatusType = 'Inicio de investigacion' | 'Finalizada' | 'Desarrollo de investigacion' | 'Esperando DT' | 'Con observaciones' | 'Adopcion de medidas';
 
 export type StatusConfig = Record<StatusType, {
   color: string;
-  icon: LucideIcon;
 }>;
 
 export interface StatusColorMap {

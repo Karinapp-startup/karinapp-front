@@ -10,7 +10,6 @@ import {
   Eye,
   MoreVertical,
   AlertTriangle,
-  FileDown,
 } from "lucide-react";
 import { ComplaintType, StatusType, SortDirection, SortConfig } from "@/components/complaints/components/list-compliance/complements/types";
 import { Button } from "@/components/ui/button";
@@ -320,18 +319,15 @@ export function ComplaintsTable({
                   </HoverCardContent>
                 </HoverCard>
               </TableCell>
-              <TableCell>{complaint.victimName}</TableCell>
-              <TableCell>{complaint.companyName}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 ${statusConfig[complaint.status as StatusType].color}`}>
-                  {React.createElement(statusConfig[complaint.status as StatusType].icon, {
-                    className: "w-3 h-3"
-                  })}
+              <TableCell className="text-left px-6">{complaint.victimName}</TableCell>
+              <TableCell className="text-left px-6">{complaint.companyName}</TableCell>
+              <TableCell className="text-left px-6">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[complaint.status as StatusType].color}`}>
                   {complaint.status}
                 </span>
               </TableCell>
-              <TableCell>{complaint.entryDate}</TableCell>
-              <TableCell>
+              <TableCell className="text-left px-6">{complaint.entryDate}</TableCell>
+              <TableCell className="text-left px-6">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${getDueStatus(complaint.dueDate) === 'onTime' ? 'bg-green-500' :
                     getDueStatus(complaint.dueDate) === 'warning' ? 'bg-yellow-500' :
