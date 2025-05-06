@@ -5,5 +5,6 @@ export interface ComplaintType {
   status: string;
   entryDate: string;
   dueDate: string;
+  step: string;
   // ... otros campos
 } 

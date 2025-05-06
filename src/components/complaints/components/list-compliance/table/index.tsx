@@ -187,7 +187,7 @@ export function ComplaintsTable({
                 onClick={() => handleSort('victimName')}
                 className="h-8 text-left font-medium flex items-center"
               >
-                Nombre de la víctima
+                Empleador
                 <SortIcon column="victimName" />
               </Button>
             </TableHead>
@@ -207,7 +207,7 @@ export function ComplaintsTable({
                 onClick={() => handleSort('status')}
                 className="h-8 text-left font-medium flex items-center"
               >
-                Status
+                Estado
                 <SortIcon column="status" />
               </Button>
             </TableHead>
@@ -217,7 +217,7 @@ export function ComplaintsTable({
                 onClick={() => handleSort('entryDate')}
                 className="h-8 text-left font-medium flex items-center"
               >
-                Fecha de ingreso
+                Fecha de creación
                 <SortIcon column="entryDate" />
               </Button>
             </TableHead>
@@ -227,7 +227,17 @@ export function ComplaintsTable({
                 onClick={() => handleSort('dueDate')}
                 className="h-8 text-left font-medium flex items-center"
               >
-                Próximo a vencer
+                Plazo a vencer
+                <SortIcon column="dueDate" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort('dueDate')}
+                className="h-8 text-left font-medium flex items-center"
+              >
+                % de Complitud
                 <SortIcon column="dueDate" />
               </Button>
             </TableHead>
@@ -336,6 +346,7 @@ export function ComplaintsTable({
                   {complaint.dueDate}
                 </div>
               </TableCell>
+              <TableCell className="text-center px-6">{complaint.step}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -9,6 +9,7 @@ export interface ComplaintType {
   dueDate: string;
   priority: 'low' | 'medium' | 'high';
   assignedTo: string;
+  step: string;
   lastActivity: {
     text: string;
     date: Date;
