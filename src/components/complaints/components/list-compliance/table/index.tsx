@@ -194,16 +194,6 @@ export function ComplaintsTable({
             <TableHead>
               <Button
                 variant="ghost"
-                onClick={() => handleSort('companyName')}
-                className="h-8 text-left font-medium flex items-center"
-              >
-                Empresa
-                <SortIcon column="companyName" />
-              </Button>
-            </TableHead>
-            <TableHead>
-              <Button
-                variant="ghost"
                 onClick={() => handleSort('status')}
                 className="h-8 text-left font-medium flex items-center"
               >
@@ -237,7 +227,7 @@ export function ComplaintsTable({
                 onClick={() => handleSort('dueDate')}
                 className="h-8 text-left font-medium flex items-center"
               >
-                % de Complitud
+                Completitud
                 <SortIcon column="dueDate" />
               </Button>
             </TableHead>
@@ -329,7 +319,6 @@ export function ComplaintsTable({
                   </HoverCardContent>
                 </HoverCard>
               </TableCell>
-              <TableCell className="text-left px-6">{complaint.victimName}</TableCell>
               <TableCell className="text-left px-6">{complaint.companyName}</TableCell>
               <TableCell className="text-left px-6">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[complaint.status as StatusType].color}`}>

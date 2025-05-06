@@ -1,13 +1,13 @@
 import { StatusConfig } from "../types";
 
 export const statusConfig: StatusConfig = {
-  "Inicio de investigacion": {
+  "Inicio de investigación": {
     color: "bg-blue-100 text-blue-700",
   },
   "Finalizada": {
     color: "bg-green-100 text-green-700",
   },
-  "Desarrollo de investigacion": {
+  "Desarrollo de investigación": {
     color: "bg-blue-100 text-blue-700",
   },
   "Esperando DT": {
