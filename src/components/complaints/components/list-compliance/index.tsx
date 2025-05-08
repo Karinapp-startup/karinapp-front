@@ -1,22 +1,15 @@
 "use client";
 
-import { Dashboard } from "@/components/complaints/components/list-compliance/dashboard";
-import { QuickFilters } from "@/components/complaints/components/list-compliance/quickFilters";
-import { AdvancedSearch } from "@/components/complaints/components/list-compliance/advancedSearch";
-import { ComplaintsTable } from "@/components/complaints/components/list-compliance/table";
-import { ComplaintsPagination } from "@/components/complaints/components/list-compliance/pagination";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, Download, Mail } from "lucide-react";
-import { ComplaintType } from "@/components/complaints/components/list-compliance/complements/types";
-import { Card } from '@/components/common/card';
-import { PageHeader } from '@/components/common/pageHeader';
-import { ComplaintsHeader } from "@/components/complaints/components/list-compliance/header";
-import { complaintsMockData } from "@/components/complaints/components/list-compliance/complements/data/mockData";
-import { exportToExcel } from "@/components/complaints/components/list-compliance/complements/utils/export";
+import { Dashboard } from "./dashboard";
+import { ComplaintsTable } from "./table";
+import { ComplaintsHeader } from "./header";
+import { NewComplaint } from "@/components/complaints/components/new-complaint";
+import { ComplaintType } from "./complements/types";
+import { exportToExcel } from "./complements/utils/export";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { NewComplaint } from "@/components/complaints/components/new-complaint";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 
 interface ComplaintsProps {
   complaints: ComplaintType[];
@@ -27,7 +20,7 @@ export function Complaints({ complaints }: ComplaintsProps) {
   const [isNewComplaintOpen, setIsNewComplaintOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // O el número que prefieras
+  const itemsPerPage = 10;
 
   const handleExport = () => {
     if (selectedRows.length === 0) {
@@ -38,7 +31,6 @@ export function Complaints({ complaints }: ComplaintsProps) {
     try {
       const selectedComplaints = complaints.filter(c => selectedRows.includes(c.id));
       exportToExcel(selectedComplaints);
-
       toast.success('Exportación exitosa', {
         description: `Se han exportado ${selectedComplaints.length} denuncias`
       });
@@ -49,12 +41,11 @@ export function Complaints({ complaints }: ComplaintsProps) {
   };
 
   const handleSearch = (term: string) => {
-    console.log('Search term:', term); // Para debug
     setSearchTerm(term);
+    setCurrentPage(1);
   };
 
   const filteredComplaints = useMemo(() => {
-    console.log('Filtering with term:', searchTerm); // Para debug
     if (!searchTerm) return complaints;
 
     const searchLower = searchTerm.toLowerCase();
@@ -68,13 +59,12 @@ export function Complaints({ complaints }: ComplaintsProps) {
         dueDate: complaint.dueDate,
       };
 
-      return Object.values(searchableFields).some(value => 
+      return Object.values(searchableFields).some(value =>
         value?.toString().toLowerCase().includes(searchLower)
       );
     });
   }, [complaints, searchTerm]);
 
-  // Calcular paginación
   const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage);
   const paginatedComplaints = filteredComplaints.slice(
     (currentPage - 1) * itemsPerPage,
@@ -82,24 +72,50 @@ export function Complaints({ complaints }: ComplaintsProps) {
   );
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" className="text-gray-600">
+          <ChevronLeft className="h-4 w-4" />
+          <span>Denuncias</span>
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        <h1 className="text-2xl font-semibold">Índice de denuncias</h1>
+        <Dashboard complaints={complaints} />
+      </div>
+
       <ComplaintsHeader
         selectedCount={selectedRows.length}
         onExport={handleExport}
         onSearch={handleSearch}
       />
+
       <ComplaintsTable
         complaints={paginatedComplaints}
         selectedRows={selectedRows}
         onSelectedRowsChange={setSelectedRows}
       />
-      <div className="mt-4">
-        <ComplaintsPagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      </div>
+
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <nav className="flex items-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 rounded ${currentPage === page
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
+                  }`}
+              >
+                {page}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
+
       <NewComplaint
         isOpen={isNewComplaintOpen}
         onClose={() => setIsNewComplaintOpen(false)}

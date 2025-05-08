@@ -38,7 +38,6 @@ export const AdvancedSearch = React.forwardRef<
         to: dateRange?.to ? format(dateRange.to, 'dd/MM/yyyy') : null,
       }
     });
-    // Aquí puedes implementar la lógica de filtrado
   };
 
   return (

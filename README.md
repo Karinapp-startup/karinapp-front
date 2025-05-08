@@ -10,7 +10,6 @@ Sistema de gestión de denuncias desarrollado con Next.js 14, TypeScript y Tailw
 - 👤 Gestión de usuarios
 - 🎨 UI moderna con Tailwind CSS y Shadcn/ui
 
-
 ## Estructura del Proyecto
 bash
 src/
@@ -28,7 +27,6 @@ src/
 │ │ └── utils/ # Utilidades
 │ └── ui/ # Componentes UI base
 └── styles/ # Estilos globales
-
 
 
 ## Tecnologías
@@ -71,4 +69,3 @@ En desarrollo activo. Versión actual: 0.1.0
 ## Licencia
 
 MIT
-
