@@ -5,6 +5,16 @@ export interface ComplaintType {
   status: string;
   entryDate: string;
   dueDate: string;
-  step: string;
-  // ... otros campos
+  companyName: string;
+  priority: string;
+  assignedTo: string;
+  lastActivity: {
+    date: string;
+    time: string;
+    description: string;
+  };
+  lastUpdate: {
+    date: string;
+    time: string;
+  };
 } 
