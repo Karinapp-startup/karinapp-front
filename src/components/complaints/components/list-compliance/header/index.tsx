@@ -77,7 +77,7 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
               <FileDown className="h-4 w-4" />
               Exportar {selectedCount > 0 && `(${selectedCount})`}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="hidden">
               <Mail className="h-4 w-4 mr-2" />
               Enviar recordatorio
             </Button>
