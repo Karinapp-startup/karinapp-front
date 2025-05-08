@@ -10,6 +10,7 @@ import {
   Eye,
   MoreVertical,
   AlertTriangle,
+  Pencil,
 } from "lucide-react";
 import { ComplaintType, StatusType, SortDirection, SortConfig } from "@/components/complaints/components/list-compliance/complements/types";
 import { Button } from "@/components/ui/button";
@@ -34,12 +35,6 @@ import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { statusConfig } from "@/components/complaints/components/list-compliance/complements/utils/statusConfig";
 import { getDueStatus } from "@/components/complaints/components/list-compliance/complements/utils/dateUtils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Timeline } from "../timeline";
 import { exportToExcel } from "../complements/utils/export";
 
@@ -337,27 +332,16 @@ export function ComplaintsTable({
               </TableCell>
               <TableCell className="text-center px-6">{complaint.step}</TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver detalles
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Clock className="w-4 h-4 mr-2" />
-                      Extender plazo
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
-                      <AlertTriangle className="w-4 h-4 mr-2" />
-                      Marcar urgente
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => {
+                    // Lógica para abrir modal de edición o similar
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
