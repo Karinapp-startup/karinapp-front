@@ -21,6 +21,7 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   useEffect(() => {
@@ -28,10 +29,8 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
   }, [debouncedSearch, onSearch]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    console.log('Input value:', value); // Para debug
-    setSearchTerm(value);
-    onSearch(value); // Llamamos directamente a onSearch sin debounce por ahora
+    setSearchTerm(e.target.value);
+    // onSearch(value); // Llamamos directamente a onSearch sin debounce por ahora
   };
 
   const handleNewComplaint = () => {

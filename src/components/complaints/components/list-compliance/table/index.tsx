@@ -230,7 +230,7 @@ export function ComplaintsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {complaints.map((complaint) => (
+          {initialComplaints.map((complaint) => (
             <TableRow
               key={complaint.id}
               className={cn(

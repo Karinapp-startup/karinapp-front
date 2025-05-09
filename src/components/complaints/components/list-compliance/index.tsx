@@ -9,7 +9,7 @@ import { exportToExcel } from "./complements/utils/export";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, CloudCog } from "lucide-react";
 
 interface ComplaintsProps {
   complaints: ComplaintType[];
@@ -41,10 +41,12 @@ export function Complaints({ complaints }: ComplaintsProps) {
   };
 
   const handleSearch = (term: string) => {
+    console.log({termino: term})
     setSearchTerm(term);
     setCurrentPage(1);
   };
 
+  //Logica de filtrado
   const filteredComplaints = useMemo(() => {
     if (!searchTerm) return complaints;
 
@@ -52,11 +54,8 @@ export function Complaints({ complaints }: ComplaintsProps) {
     return complaints.filter(complaint => {
       const searchableFields = {
         id: complaint.id,
-        victimName: complaint.victimName,
-        employer: complaint.employer,
-        status: complaint.status,
-        entryDate: complaint.entryDate,
-        dueDate: complaint.dueDate,
+        employer: complaint.companyName,
+        status: complaint.status
       };
 
       return Object.values(searchableFields).some(value =>
@@ -64,6 +63,11 @@ export function Complaints({ complaints }: ComplaintsProps) {
       );
     });
   }, [complaints, searchTerm]);
+
+  console.log('filteredComplaints', filteredComplaints)
+  console.log('complaints', complaints)
+  console.log('searchTerm', searchTerm)
+  
 
   const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage);
   const paginatedComplaints = filteredComplaints.slice(
