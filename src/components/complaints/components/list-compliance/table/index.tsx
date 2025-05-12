@@ -179,10 +179,20 @@ export function ComplaintsTable({
             <TableHead>
               <Button
                 variant="ghost"
-                onClick={() => handleSort('victimName')}
+                onClick={() => handleSort('companyName')}
                 className="h-8 text-left font-medium flex items-center"
               >
                 Empleador
+                <SortIcon column="companyName" />
+              </Button>
+            </TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                onClick={() => handleSort('victimName')}
+                className="h-8 text-left font-medium flex items-center"
+              >
+                Denunciante
                 <SortIcon column="victimName" />
               </Button>
             </TableHead>
@@ -315,6 +325,7 @@ export function ComplaintsTable({
                 </HoverCard>
               </TableCell>
               <TableCell className="text-left px-6">{complaint.companyName}</TableCell>
+              <TableCell className="text-left px-6">{complaint.victimName}</TableCell>
               <TableCell className="text-left px-6">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[complaint.status as StatusType].color}`}>
                   {complaint.status}
