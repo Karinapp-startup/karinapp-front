@@ -5,18 +5,20 @@ const generateActivities = (id: string) => [
   {
     id: `${id}-1`,
     action: "Denuncia creada",
-    date: subDays(new Date(), 5),
+    date: subDays(now, 5),
     user: "Juan Pérez",
     details: "Registro inicial de la denuncia"
   },
   {
     id: `${id}-2`,
     action: "Actualización de estado",
-    date: subDays(new Date(), 2),
+    date: subDays(now, 2),
     user: "María González",
     details: "Revisión de documentación"
   }
 ];
+
+const now = new Date("2025-04-27T12:00:00Z");
 
 export const complaintsMockData: ComplaintType[] = [
   {
@@ -31,9 +33,9 @@ export const complaintsMockData: ComplaintType[] = [
     step: "1/9",
     lastActivity: {
       text: "Revisión inicial",
-      date: new Date()
+      date: now
     },
-    lastUpdate: new Date(),
+    lastUpdate: now,
     activities: generateActivities("F1239")
   },
   {
@@ -48,9 +50,9 @@ export const complaintsMockData: ComplaintType[] = [
     step: "9/9",
     lastActivity: {
       text: "Caso cerrado",
-      date: subHours(new Date(), 2)
+      date: subHours(now, 2)
     },
-    lastUpdate: subDays(new Date(), 1),
+    lastUpdate: subDays(now, 1),
     activities: generateActivities("F1240")
   },
   {
@@ -65,9 +67,9 @@ export const complaintsMockData: ComplaintType[] = [
     step: "2/9",
     lastActivity: {
       text: "Derivación a departamento legal",
-      date: subDays(new Date(), 2)
+      date: subDays(now, 2)
     },
-    lastUpdate: subDays(new Date(), 2),
+    lastUpdate: subDays(now, 2),
     activities: generateActivities("F1223")
   },
   {
@@ -81,7 +83,7 @@ export const complaintsMockData: ComplaintType[] = [
     assignedTo: "Pedro Soto",
     step: "7/9",
     lastActivity: "Solicitud de documentación adicional",
-    lastUpdate: new Date(),
+    lastUpdate: now,
     activities: generateActivities("F8989")
   },
   {
@@ -95,7 +97,7 @@ export const complaintsMockData: ComplaintType[] = [
     assignedTo: "Laura Vega",
     step: "8/9",
     lastActivity: "Asignación de responsable",
-    lastUpdate: subDays(new Date(), 1),
+    lastUpdate: subDays(now, 1),
     activities: generateActivities("F1251")
   },
   {
@@ -109,7 +111,7 @@ export const complaintsMockData: ComplaintType[] = [
     assignedTo: "Diego Muñoz",
     step: "6/9",
     lastActivity: "Revisión completada",
-    lastUpdate: subDays(new Date(), 3),
+    lastUpdate: subDays(now, 3),
     activities: generateActivities("F1252")
   },
   {
@@ -123,7 +125,7 @@ export const complaintsMockData: ComplaintType[] = [
     assignedTo: "Carmen Silva",
     step: "6/9",
     lastActivity: "Derivación a fiscalía",
-    lastUpdate: new Date(),
+    lastUpdate: now,
     activities: generateActivities("F1260")
   },
   {
@@ -137,7 +139,7 @@ export const complaintsMockData: ComplaintType[] = [
     assignedTo: "Roberto Parra",
     step: "4/9",
     lastActivity: "Pendiente documentación",
-    lastUpdate: subDays(new Date(), 2),
+    lastUpdate: subDays(now, 2),
     activities: generateActivities("F1277")
   },
   {
@@ -151,7 +153,21 @@ export const complaintsMockData: ComplaintType[] = [
     assignedTo: "Claudia Rojas",
     step: "7/9",
     lastActivity: "Registro inicial",
-    lastUpdate: new Date(),
+    lastUpdate: now,
+    activities: generateActivities("F1300")
+  },
+  {
+    id: "F1333",
+    victimName: "Juan Pablo Simpson",
+    companyName: "Constructora Pocuro",
+    status: "Esperando DT",
+    entryDate: "27/04/25",
+    dueDate: "27/04/25",
+    priority: "high",
+    assignedTo: "Claudia Rojas",
+    step: "7/9",
+    lastActivity: "Registro inicial",
+    lastUpdate: now,
     activities: generateActivities("F1300")
   },
   {
@@ -166,9 +182,26 @@ export const complaintsMockData: ComplaintType[] = [
     step: "9/9",
     lastActivity: {
       text: "Revisión de seguimiento",
-      date: subDays(new Date(), 1)
+      date: subDays(now, 1)
     },
-    lastUpdate: subDays(new Date(), 1),
+    lastUpdate: subDays(now, 1),
+    activities: generateActivities("F1355")
+  },
+  {
+    id: "F1666",
+    victimName: "Juan Pablo Herrera",
+    companyName: "Mecanica NFS",
+    status: "Finalizada",
+    entryDate: "27/04/25",
+    dueDate: "27/04/25",
+    priority: "low",
+    assignedTo: "Felipe Ortiz",
+    step: "9/9",
+    lastActivity: {
+      text: "Revisión de seguimiento",
+      date: subDays(now, 1)
+    },
+    lastUpdate: subDays(now, 1),
     activities: generateActivities("F1355")
   }
 ]; 

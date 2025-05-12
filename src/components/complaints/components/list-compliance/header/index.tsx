@@ -2,11 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileDown, Mail, Plus, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import { FileDown, Mail, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Loading } from "@/components/common/loading";
+import { useState, useEffect, useRef } from "react";
 import { AdvancedSearch } from "@/components/complaints/components/list-compliance/advancedSearch";
 import { TransitionLoading } from "@/components/complaints/components/new-complaint/components/TransitionLoading";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -23,14 +21,23 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
   const [searchTerm, setSearchTerm] = useState("");
 
   const debouncedSearch = useDebounce(searchTerm, 300);
+  const hasRunEmptySearch = useRef(false);
 
   useEffect(() => {
+    if (debouncedSearch === "") {
+      if (!hasRunEmptySearch.current) {
+        hasRunEmptySearch.current = true;
+        onSearch("");
+      }
+      return;
+    }
+  
+    hasRunEmptySearch.current = false; 
     onSearch(debouncedSearch);
   }, [debouncedSearch, onSearch]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    // onSearch(value); // Llamamos directamente a onSearch sin debounce por ahora
   };
 
   const handleNewComplaint = () => {
