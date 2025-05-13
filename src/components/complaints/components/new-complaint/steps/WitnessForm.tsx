@@ -2,36 +2,40 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  WitnessFormData,
+  WitnessPerson,
+  witnessFields,
+  defaultWitnessFormData
+} from "@/interfaces/complaints/forms/witness";
+import { StepProps } from "@/interfaces/complaints/forms";
 
-interface WitnessFormProps {
-  formData: any;
-  updateFormData: (data: any) => void;
+interface Props extends Omit<StepProps, 'onNext'> {
+  defaultValues: WitnessFormData;
+  onNext: (data: WitnessFormData) => void;
 }
 
-export function WitnessForm({ formData, updateFormData }: WitnessFormProps) {
+export const WitnessForm = ({ onNext, onBack, defaultValues }: Props) => {
   const handleAddWitness = () => {
-    if (!formData.currentWitness?.fullName) return;
+    if (!defaultValues.currentWitness.fullName) return;
     
-    const newWitness = {
-      fullName: formData.currentWitness.fullName,
-      position: formData.currentWitness.position || '',
-      department: formData.currentWitness.department || ''
+    const updatedValues: WitnessFormData = {
+      ...defaultValues,
+      witnesses: [...defaultValues.witnesses, defaultValues.currentWitness],
+      currentWitness: defaultWitnessFormData.currentWitness
     };
-
-    const currentWitnesses = formData.witnesses || [];
-    updateFormData({ 
-      witnesses: [...currentWitnesses, newWitness],
-      currentWitness: { fullName: '', position: '', department: '' }
-    });
+    onNext(updatedValues);
   };
 
-  const updateCurrentWitness = (field: string, value: string) => {
-    updateFormData({
+  const handleWitnessChange = (field: keyof WitnessPerson, value: string) => {
+    const updatedValues: WitnessFormData = {
+      ...defaultValues,
       currentWitness: {
-        ...(formData.currentWitness || {}),
+        ...defaultValues.currentWitness,
         [field]: value
       }
-    });
+    };
+    onNext(updatedValues);
   };
 
   return (
@@ -45,35 +49,27 @@ export function WitnessForm({ formData, updateFormData }: WitnessFormProps) {
 
         <div className="space-y-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <Input 
-                placeholder="ej: Juan Pablo"
-                value={formData.currentWitness?.fullName || ''}
-                onChange={(e) => updateCurrentWitness('fullName', e.target.value)}
-                className="bg-white border-gray-200"
-              />
-              <div className="text-sm text-gray-600">Nombre completo</div>
-            </div>
-
-            <div className="space-y-1">
-              <Input 
-                placeholder="ej: López González"
-                value={formData.currentWitness?.position || ''}
-                onChange={(e) => updateCurrentWitness('position', e.target.value)}
-                className="bg-white border-gray-200"
-              />
-              <div className="text-sm text-gray-600">Cargo</div>
-            </div>
+            {witnessFields.slice(0, 2).map((field) => (
+              <div key={field.id} className="space-y-1">
+                <Input 
+                  placeholder={field.placeholder}
+                  value={defaultValues.currentWitness[field.id]}
+                  onChange={(e) => handleWitnessChange(field.id, e.target.value)}
+                  className="bg-white border-gray-200"
+                />
+                <div className="text-sm text-gray-600">{field.label}</div>
+              </div>
+            ))}
 
             <div className="flex items-start gap-4">
               <div className="flex-1 space-y-1">
                 <Input 
-                  placeholder="ej: López González"
-                  value={formData.currentWitness?.department || ''}
-                  onChange={(e) => updateCurrentWitness('department', e.target.value)}
+                  placeholder={witnessFields[2].placeholder}
+                  value={defaultValues.currentWitness.department}
+                  onChange={(e) => handleWitnessChange('department', e.target.value)}
                   className="bg-white border-gray-200"
                 />
-                <div className="text-sm text-gray-600">Departamento/Servicio</div>
+                <div className="text-sm text-gray-600">{witnessFields[2].label}</div>
               </div>
               <Button
                 onClick={handleAddWitness}
@@ -87,36 +83,28 @@ export function WitnessForm({ formData, updateFormData }: WitnessFormProps) {
           </div>
         </div>
 
-        {formData.witnesses?.length > 0 && (
+        {defaultValues.witnesses.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-gray-900">Testigos añadidos</h3>
             <div className="bg-white rounded-lg overflow-hidden">
               <table className="min-w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-xs font-medium text-gray-500 uppercase py-2 px-4 text-left">
-                      Nombre completo
-                    </th>
-                    <th className="text-xs font-medium text-gray-500 uppercase py-2 px-4 text-left">
-                      Cargo
-                    </th>
-                    <th className="text-xs font-medium text-gray-500 uppercase py-2 px-4 text-left">
-                      Departamento/Servicio
-                    </th>
+                    {witnessFields.map((field) => (
+                      <th key={field.id} className="text-xs font-medium text-gray-500 uppercase py-2 px-4 text-left">
+                        {field.label}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {formData.witnesses.map((witness: any, index: number) => (
+                  {defaultValues.witnesses.map((witness, index) => (
                     <tr key={index} className="border-b border-gray-200 last:border-0">
-                      <td className="py-3 px-4 text-sm text-gray-500">
-                        {witness.fullName}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-500">
-                        {witness.position}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-500">
-                        {witness.department}
-                      </td>
+                      {witnessFields.map((field) => (
+                        <td key={field.id} className="py-3 px-4 text-sm text-gray-500">
+                          {witness[field.id]}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
@@ -127,4 +115,4 @@ export function WitnessForm({ formData, updateFormData }: WitnessFormProps) {
       </div>
     </div>
   );
-} 
+}; 

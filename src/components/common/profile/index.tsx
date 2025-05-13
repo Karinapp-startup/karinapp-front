@@ -7,6 +7,12 @@ import { PenIcon, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { SendInvitationDialog } from "./components/send-invitation";
 import { ChangePasswordDialog } from "./components/change-password";
+import {
+    ProfileData,
+    CompanyData,
+    LaborRepresentative,
+    ConnectionStatus
+} from "@/interfaces/common/profile";
 
 export const Profile = () => {
     return (

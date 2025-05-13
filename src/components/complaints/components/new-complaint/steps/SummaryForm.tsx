@@ -5,20 +5,62 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  SummaryFormData,
+  InvestigationType,
+  investigationOptions,
+  timeOptions 
+} from "@/interfaces/complaints/forms/summary";
+import { StepProps } from "@/interfaces/complaints/forms";
 
-interface SummaryFormProps {
-  formData: any;
-  updateFormData: (data: any) => void;
+interface Props extends Omit<StepProps, 'onNext'> {
+  defaultValues: SummaryFormData;
+  onNext: (data: SummaryFormData) => void;
+  employerName?: string;
 }
 
-export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+export const SummaryForm = ({ onNext, onBack, defaultValues, employerName }: Props) => {
+  const handleSummaryChange = (value: string) => {
+    const updatedValues: SummaryFormData = {
+      ...defaultValues,
+      summary: value
+    };
+    onNext(updatedValues);
+  };
+
+  const handleInvestigationChange = (value: InvestigationType) => {
+    const updatedValues: SummaryFormData = {
+      ...defaultValues,
+      investigationBy: value
+    };
+    onNext(updatedValues);
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      const updatedValues: SummaryFormData = {
+        ...defaultValues,
+        actDate: date
+      };
+      onNext(updatedValues);
+    }
+  };
+
+  const handleTimeChange = (type: 'hour' | 'minute', value: string) => {
+    const updatedValues: SummaryFormData = {
+      ...defaultValues,
+      actTime: {
+        ...defaultValues.actTime,
+        [type]: value
+      }
+    };
+    onNext(updatedValues);
+  };
 
   return (
     <div className="space-y-8">
@@ -30,8 +72,8 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
         </p>
         <Textarea
           placeholder="Escribe acá el resumen..."
-          value={formData.summary || ''}
-          onChange={(e) => updateFormData({ summary: e.target.value })}
+          value={defaultValues.summary}
+          onChange={(e) => handleSummaryChange(e.target.value)}
           className="min-h-[160px] bg-white border-gray-200 resize-none"
         />
       </div>
@@ -42,31 +84,29 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
         </p>
 
         <RadioGroup
-          value={formData.investigationBy || ""}
-          onValueChange={(value) => updateFormData({ investigationBy: value })}
+          value={defaultValues.investigationBy}
+          onValueChange={handleInvestigationChange}
           className="space-y-2"
         >
-          <div className={`flex items-start gap-2 p-4 rounded-lg ${formData.investigationBy === "employer" ? "bg-blue-50 border border-blue-100" : "bg-white border border-gray-200"}`}>
-            <RadioGroupItem 
-              value="employer" 
-              id="employer"
-              className="mt-1"
-            />
-            <label htmlFor="employer" className="text-sm text-gray-900">
-              {formData.employer || '[Empleador seleccionado en el paso 1]'}
-            </label>
-          </div>
-
-          <div className={`flex items-start gap-2 p-4 rounded-lg ${formData.investigationBy === "labor_direction" ? "bg-blue-50 border border-blue-100" : "bg-white border border-gray-200"}`}>
-            <RadioGroupItem 
-              value="labor_direction" 
-              id="labor_direction"
-              className="mt-1"
-            />
-            <label htmlFor="labor_direction" className="text-sm text-gray-900">
-              Dirección del trabajo
-            </label>
-          </div>
+          {investigationOptions.map((option) => (
+            <div
+              key={option.value}
+              className={`flex items-start gap-2 p-4 rounded-lg ${
+                defaultValues.investigationBy === option.value
+                  ? "bg-blue-50 border border-blue-100"
+                  : "bg-white border border-gray-200"
+              }`}
+            >
+              <RadioGroupItem 
+                value={option.value} 
+                id={option.value}
+                className="mt-1"
+              />
+              <label htmlFor={option.value} className="text-sm text-gray-900">
+                {option.value === 'employer' ? employerName : option.label}
+              </label>
+            </div>
+          ))}
         </RadioGroup>
       </div>
 
@@ -87,12 +127,12 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal bg-white border-gray-200 [&>*]:bg-white",
-                      !formData.actDate && "text-muted-foreground"
+                      !defaultValues.actDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.actDate ? (
-                      format(formData.actDate, "PPP", { locale: es })
+                    {defaultValues.actDate ? (
+                      format(defaultValues.actDate, "PPP", { locale: es })
                     ) : (
                       <span>Selecciona una fecha</span>
                     )}
@@ -101,8 +141,8 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={formData.actDate}
-                    onSelect={(date) => updateFormData({ actDate: date })}
+                    selected={defaultValues.actDate}
+                    onSelect={handleDateChange}
                     initialFocus
                     locale={es}
                     className="bg-white rounded-md border-0"
@@ -112,14 +152,14 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
 
               <div className="flex gap-2 items-center">
                 <Select
-                  value={formData.actHour}
-                  onValueChange={(value) => updateFormData({ actHour: value })}
+                  value={defaultValues.actTime.hour}
+                  onValueChange={(value) => handleTimeChange('hour', value)}
                 >
                   <SelectTrigger className="w-full bg-white border-gray-200 [&>*]:bg-white">
                     <SelectValue placeholder="Hora" />
                   </SelectTrigger>
                   <SelectContent side="bottom" align="center" className="bg-white">
-                    {hours.map((hour) => (
+                    {timeOptions.hours.map((hour) => (
                       <SelectItem key={hour} value={hour} className="bg-white hover:bg-gray-100">
                         {hour}
                       </SelectItem>
@@ -128,14 +168,14 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
                 </Select>
                 <span>:</span>
                 <Select
-                  value={formData.actMinute}
-                  onValueChange={(value) => updateFormData({ actMinute: value })}
+                  value={defaultValues.actTime.minute}
+                  onValueChange={(value) => handleTimeChange('minute', value)}
                 >
                   <SelectTrigger className="w-full bg-white border-gray-200 [&>*]:bg-white">
                     <SelectValue placeholder="Min" />
                   </SelectTrigger>
                   <SelectContent side="bottom" align="center" className="bg-white">
-                    {minutes.map((minute) => (
+                    {timeOptions.minutes.map((minute) => (
                       <SelectItem key={minute} value={minute} className="bg-white hover:bg-gray-100">
                         {minute}
                       </SelectItem>
@@ -151,4 +191,4 @@ export function SummaryForm({ formData, updateFormData }: SummaryFormProps) {
       </div>
     </div>
   );
-} 
+}; 

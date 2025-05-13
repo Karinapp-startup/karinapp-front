@@ -1,20 +1,27 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  SituationsFormData,
+  situationOptions
+} from "@/interfaces/complaints/forms/situations";
+import { StepProps } from "@/interfaces/complaints/forms";
 
-interface SituationsFormProps {
-  formData: any;
-  updateFormData: (data: any) => void;
+interface Props extends Omit<StepProps, 'onNext'> {
+  defaultValues: SituationsFormData;
+  onNext: (data: SituationsFormData) => void;
 }
 
-export function SituationsForm({ formData, updateFormData }: SituationsFormProps) {
-  const handleCheckboxChange = (key: string) => (checked: boolean) => {
-    updateFormData({
+export const SituationsForm = ({ onNext, onBack, defaultValues }: Props) => {
+  const handleCheckboxChange = (key: keyof SituationsFormData['situations']) => (checked: boolean) => {
+    const updatedValues: SituationsFormData = {
+      ...defaultValues,
       situations: {
-        ...(formData.situations || {}),
+        ...defaultValues.situations,
         [key]: checked
       }
-    });
+    };
+    onNext(updatedValues);
   };
 
   return (
@@ -29,43 +36,27 @@ export function SituationsForm({ formData, updateFormData }: SituationsFormProps
         </p>
 
         <div className="space-y-2">
-          <div className={`flex items-start gap-2 p-4 rounded-lg ${formData.situations?.hasEvidence ? "bg-blue-50 border border-blue-100" : "bg-white border border-gray-200"}`}>
-            <Checkbox
-              id="hasEvidence"
-              checked={formData.situations?.hasEvidence || false}
-              onCheckedChange={handleCheckboxChange('hasEvidence')}
-              className="mt-1"
-            />
-            <div className="text-sm text-gray-700">
-              Existe evidencia de lo denunciado (correos electrónicos, fotos, etc.)
+          {situationOptions.map((option) => (
+            <div
+              key={option.id}
+              className={`flex items-start gap-2 p-4 rounded-lg ${defaultValues.situations[option.id]
+                  ? "bg-blue-50 border border-blue-100"
+                  : "bg-white border border-gray-200"
+                }`}
+            >
+              <Checkbox
+                id={option.id}
+                checked={defaultValues.situations[option.id]}
+                onCheckedChange={handleCheckboxChange(option.id)}
+                className="mt-1"
+              />
+              <div className="text-sm text-gray-700">
+                {option.label}
+              </div>
             </div>
-          </div>
-
-          <div className={`flex items-start gap-2 p-4 rounded-lg ${formData.situations?.hasPriorCases ? "bg-blue-50 border border-blue-100" : "bg-white border border-gray-200"}`}>
-            <Checkbox
-              id="hasPriorCases"
-              checked={formData.situations?.hasPriorCases || false}
-              onCheckedChange={handleCheckboxChange('hasPriorCases')}
-              className="mt-1"
-            />
-            <div className="text-sm text-gray-700">
-              Existe conocimiento de otros antecedentes de índole similar.
-            </div>
-          </div>
-
-          <div className={`flex items-start gap-2 p-4 rounded-lg ${formData.situations?.wasPreviouslyReported ? "bg-blue-50 border border-blue-100" : "bg-white border border-gray-200"}`}>
-            <Checkbox
-              id="wasPreviouslyReported"
-              checked={formData.situations?.wasPreviouslyReported || false}
-              onCheckedChange={handleCheckboxChange('wasPreviouslyReported')}
-              className="mt-1"
-            />
-            <div className="text-sm text-gray-700">
-              La situación denunciada fue informada previamente en otra instancia similar (jefatura, supervisor, mediación laboral, etc.)
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
   );
-} 
+}; 
