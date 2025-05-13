@@ -3,7 +3,6 @@ import { DueStatus } from "../types";
 
 export function getDueStatus(dueDate: string): DueStatus {
   const today = new Date();
-  // const due = parseISO(dueDate);
   const due = parse(dueDate, "dd/MM/yy", new Date());
   const daysUntilDue = differenceInDays(due, today);
 

@@ -8,14 +8,21 @@ import { useState, useEffect, useRef } from "react";
 import { AdvancedSearch } from "@/components/complaints/components/list-compliance/advancedSearch";
 import { TransitionLoading } from "@/components/complaints/components/new-complaint/components/TransitionLoading";
 import { useDebounce } from "@/hooks/use-debounce";
+import { DateRange } from "react-day-picker";
 
 interface HeaderProps {
   selectedCount: number;
   onExport: () => void;
   onSearch: (searchTerm: string) => void;
+  onApplyFilters: (filters: {
+    employer?: string;
+    complainant?: string;
+    status?: string;
+    dateRange?: DateRange;
+  }) => void;
 }
 
-export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderProps) {
+export function ComplaintsHeader({ selectedCount, onExport, onSearch, onApplyFilters }: HeaderProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,16 +58,6 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
     <>
       {isLoading && <TransitionLoading />}
       <div className="space-y-6">
-        {/* Título y navegación */}
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-gray-600">Denuncias</span>
-        </div>
-
-        <h1 className="text-2xl font-semibold">Índice de denuncias</h1>
-
         {/* Barra de acciones */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -70,7 +67,8 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch }: HeaderPr
               value={searchTerm}
               onChange={handleSearch}
             />
-            <AdvancedSearch />
+            {/* <AdvancedSearch /> */}
+            <AdvancedSearch onApplyFilters={onApplyFilters} />
           </div>
           <div className="flex items-center gap-2">
             <Button
