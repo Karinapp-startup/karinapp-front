@@ -23,6 +23,19 @@ import { SafeguardMeasuresForm } from "../steps/SafeguardMeasuresForm";
 import { SummaryForm } from "../steps/SummaryForm";
 import { ReviewForm } from "../steps/ReviewForm";
 import { Loading } from "@/components/common/loading";
+import { ComplaintFormState } from "@/interfaces/complaints/form-state";
+import { EmployerFormData } from "@/interfaces/complaints/forms/employer";
+import { VictimFormData, defaultVictimFormData } from "@/interfaces/complaints/forms/victim";
+import { AccusedFormData } from "@/interfaces/complaints/forms/accused";
+import { RelationshipFormData } from "@/interfaces/complaints/forms/relationship";
+import { SituationsFormData } from "@/interfaces/complaints/forms/situations";
+import { WitnessFormData } from "@/interfaces/complaints/forms/witness";
+import { ReportedFactsFormData } from "@/interfaces/complaints/forms/reported-facts";
+import { ReportedSituationsFormData } from "@/interfaces/complaints/forms/reported-situations";
+import { SafeguardMeasuresFormData } from "@/interfaces/complaints/forms/safeguard";
+import { SummaryFormData } from "@/interfaces/complaints/forms/summary";
+import { ReviewFormData } from "@/interfaces/complaints/forms/review";
+import { Label } from "@/components/ui/label";
 
 export function ComplaintForm() {
   const {
@@ -36,11 +49,200 @@ export function ComplaintForm() {
 
   const TOTAL_STEPS = 10;
 
+  const handleEmployerUpdate = (data: EmployerFormData) => {
+    updateFormData({ employer: data });
+  };
+
+  const handleVictimUpdate = (data: VictimFormData) => {
+    updateFormData({ victim: data });
+  };
+
+  const handleAccusedNext = (data: AccusedFormData) => {
+    updateFormData({ accused: data });
+    nextStep();
+  };
+
+  const handleRelationshipNext = (data: RelationshipFormData) => {
+    updateFormData({ relationship: data });
+    nextStep();
+  };
+
+  const handleSituationsNext = (data: SituationsFormData) => {
+    const reportedData: ReportedSituationsFormData = {
+      situationType: "workplace_harassment",
+      description: "Situación reportada",
+      frequency: 'once',
+      affectedEmployees: [],
+      impactLevel: 'low',
+      previousReports: data.situations.wasPreviouslyReported,
+      evidence: data.situations.hasEvidence,
+      priorCases: data.situations.hasPriorCases
+    };
+    updateFormData({ reportedSituations: reportedData });
+    nextStep();
+  };
+
+  const handleWitnessNext = (data: WitnessFormData) => {
+    updateFormData({ witness: data });
+    nextStep();
+  };
+
+  const handleReportedFactsNext = (data: ReportedFactsFormData) => {
+    updateFormData({ reportedFacts: data });
+    nextStep();
+  };
+
+  const handleReportedSituationsNext = (data: ReportedSituationsFormData) => {
+    updateFormData({ reportedSituations: data });
+    nextStep();
+  };
+
+  const handleSafeguardNext = (data: SafeguardMeasuresFormData) => {
+    updateFormData({ safeguardMeasures: data });
+    nextStep();
+  };
+
+  const handleSummaryNext = (data: SummaryFormData) => {
+    const reviewData: ReviewFormData = {
+      confirmed: false,
+      signature: '',
+      reviewDate: new Date()
+    };
+    updateFormData({
+      review: reviewData,
+      isReviewing: true
+    });
+  };
+
+  const handleReviewNext = (data: ReviewFormData) => {
+    updateFormData({ review: data });
+  };
+
+  const handleEditSection = (path: string) => {
+    console.log('Editando sección:', path);
+  };
+
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 1: // Employer Form
+        return !!(
+          formData.employer?.employer &&
+          formData.employer.employer !== 'select' &&
+          formData.employer?.date instanceof Date &&
+          !isNaN(formData.employer.date.getTime())
+        );
+      // ... otros casos
+      default:
+        return true;
+    }
+  };
+
   const handleNextStep = () => {
-    if (currentStep === 10) {
-      updateFormData({ isReviewing: true });
-    } else {
+    if (isStepValid()) {
       nextStep();
+    }
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <EmployerForm
+            defaultValues={formData.employer}
+            onNext={handleEmployerUpdate}
+            onBack={previousStep}
+          />
+        );
+      case 2:
+        return (
+          <VictimForm
+            defaultValues={formData.victim || defaultVictimFormData}
+            onNext={handleVictimUpdate}
+            onBack={previousStep}
+          />
+        );
+      case 3:
+        return (
+          <AccusedForm
+            defaultValues={formData.accused}
+            onNext={handleAccusedNext}
+            onBack={previousStep}
+          />
+        );
+      case 4:
+        return (
+          <RelationshipForm
+            defaultValues={formData.relationship}
+            onNext={handleRelationshipNext}
+            onBack={previousStep}
+          />
+        );
+      case 5:
+        const situationsData: SituationsFormData = {
+          situations: {
+            hasEvidence: formData.reportedSituations?.evidence || false,
+            hasPriorCases: formData.reportedSituations?.priorCases || false,
+            wasPreviouslyReported: formData.reportedSituations?.previousReports || false
+          }
+        };
+        return (
+          <SituationsForm
+            defaultValues={situationsData}
+            onNext={handleSituationsNext}
+            onBack={previousStep}
+          />
+        );
+      case 6:
+        return (
+          <WitnessForm
+            defaultValues={formData.witness}
+            onNext={handleWitnessNext}
+            onBack={previousStep}
+          />
+        );
+      case 7:
+        return (
+          <ReportedFactsForm
+            defaultValues={formData.reportedFacts}
+            onNext={handleReportedFactsNext}
+            onBack={previousStep}
+          />
+        );
+      case 8:
+        return (
+          <ReportedSituationsForm
+            defaultValues={formData.reportedSituations}
+            onNext={handleReportedSituationsNext}
+            onBack={previousStep}
+          />
+        );
+      case 9:
+        return (
+          <SafeguardMeasuresForm
+            defaultValues={formData.safeguardMeasures}
+            onNext={handleSafeguardNext}
+            onBack={previousStep}
+          />
+        );
+      case 10:
+        const summaryData: SummaryFormData = {
+          summary: '',
+          investigationBy: 'employer',
+          actDate: new Date(),
+          actTime: {
+            hour: '09',
+            minute: '00'
+          }
+        };
+        return (
+          <SummaryForm
+            defaultValues={summaryData}
+            onNext={handleSummaryNext}
+            onBack={previousStep}
+          />
+        );
+      default:
+        return <div>Paso no implementado</div>;
     }
   };
 
@@ -73,9 +275,11 @@ export function ComplaintForm() {
           <div className="w-full max-w-[800px] mx-auto">
             <div className="rounded-2xl border border-[#EAECF0] bg-[#F9FAFB] p-8">
               <ReviewForm
-                formData={formData}
-                updateFormData={updateFormData}
+                defaultValues={formData.review}
+                onNext={handleReviewNext}
                 onBack={previousStep}
+                complaintData={formData}
+                onEditSection={handleEditSection}
               />
             </div>
           </div>
@@ -83,33 +287,6 @@ export function ComplaintForm() {
       </div>
     );
   }
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <EmployerForm formData={formData} updateFormData={updateFormData} />;
-      case 2:
-        return <VictimForm formData={formData} updateFormData={updateFormData} />;
-      case 3:
-        return <AccusedForm formData={formData} updateFormData={updateFormData} />;
-      case 4:
-        return <RelationshipForm formData={formData} updateFormData={updateFormData} />;
-      case 5:
-        return <SituationsForm formData={formData} updateFormData={updateFormData} />;
-      case 6:
-        return <WitnessForm formData={formData} updateFormData={updateFormData} />;
-      case 7:
-        return <ReportedFactsForm formData={formData} updateFormData={updateFormData} />;
-      case 8:
-        return <ReportedSituationsForm formData={formData} updateFormData={updateFormData} />;
-      case 9:
-        return <SafeguardMeasuresForm formData={formData} updateFormData={updateFormData} />;
-      case 10:
-        return <SummaryForm formData={formData} updateFormData={updateFormData} />;
-      default:
-        return <div>Paso no implementado</div>;
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -155,26 +332,19 @@ export function ComplaintForm() {
 
               {renderStep()}
 
-              <div className="flex justify-between mt-8">
-                {currentStep > 1 && (
-                  <Button
-                    onClick={previousStep}
-                    disabled={isLoading}
-                    variant="outline"
-                    className="bg-white"
-                  >
-                    Atrás
-                  </Button>
-                )}
-                <div className={currentStep === 1 ? 'ml-auto' : ''}>
-                  <Button
-                    onClick={handleNextStep}
-                    disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6"
-                  >
-                    {currentStep === 10 ? "Revisar" : "Siguiente"}
-                  </Button>
-                </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleNextStep}
+                  disabled={!isStepValid()}
+                  className={cn(
+                    "px-6",
+                    isStepValid()
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  )}
+                >
+                  {currentStep === 10 ? "Revisar" : "Siguiente"}
+                </Button>
               </div>
             </div>
           </div>

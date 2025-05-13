@@ -1,13 +1,23 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
+import { ReportedFactsFormData } from "@/interfaces/complaints/forms/reported-facts";
+import { StepProps } from "@/interfaces/complaints/forms";
 
-interface ReportedFactsFormProps {
-  formData: any;
-  updateFormData: (data: any) => void;
+interface Props extends Omit<StepProps, 'onNext'> {
+  defaultValues: ReportedFactsFormData;
+  onNext: (data: ReportedFactsFormData) => void;
 }
 
-export function ReportedFactsForm({ formData, updateFormData }: ReportedFactsFormProps) {
+export const ReportedFactsForm = ({ onNext, onBack, defaultValues }: Props) => {
+  const handleFactsChange = (value: string) => {
+    const updatedValues: ReportedFactsFormData = {
+      ...defaultValues,
+      reportedFacts: value
+    };
+    onNext(updatedValues);
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-900">Hechos denunciados</h2>
@@ -20,12 +30,12 @@ export function ReportedFactsForm({ formData, updateFormData }: ReportedFactsFor
         <div>
           <Textarea
             placeholder="Desarrolla lo más detalladamente los hechos que deben ser investigados:"
-            value={formData.reportedFacts || ''}
-            onChange={(e) => updateFormData({ reportedFacts: e.target.value })}
+            value={defaultValues.reportedFacts}
+            onChange={(e) => handleFactsChange(e.target.value)}
             className="min-h-[160px] bg-white border-gray-200 resize-none focus:ring-blue-500"
           />
         </div>
       </div>
     </div>
   );
-} 
+}; 
