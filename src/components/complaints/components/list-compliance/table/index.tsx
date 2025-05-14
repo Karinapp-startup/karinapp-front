@@ -30,13 +30,15 @@ import {
 } from "@/components/ui/hover-card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { format, isToday } from "date-fns";
+import { format, isToday, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { statusConfig } from "@/components/complaints/components/list-compliance/complements/utils/statusConfig";
 import { getDueStatus } from "@/components/complaints/components/list-compliance/complements/utils/dateUtils";
 import { Timeline } from "../timeline";
 import { exportToExcel } from "../complements/utils/export";
+import { useState, useMemo } from "react";
+import { statusAliases } from "../complements/types";
 
 interface ComplaintsTableProps {
   complaints: ComplaintType[];
@@ -49,43 +51,40 @@ export function ComplaintsTable({
   selectedRows,
   onSelectedRowsChange
 }: ComplaintsTableProps) {
-  const [complaints, setComplaints] = React.useState(initialComplaints);
-  const [sort, setSort] = React.useState<SortConfig>({
-    column: undefined,
-    direction: undefined,
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    column: 'entryDate',
+    direction: 'desc'
   });
 
-  const handleSort = (column: keyof ComplaintType) => {
-    const newDirection: SortDirection =
-      sort.column === column
-        ? sort.direction === 'asc'
-          ? 'desc'
-          : sort.direction === 'desc'
-            ? undefined
-            : 'asc'
-        : 'asc';
+  // Función para ordenar los datos
+  const sortedComplaints = useMemo(() => {
+    const sorted = [...initialComplaints].sort((a, b) => {
+      if (!sortConfig.column) return 0;
 
-    setSort({ column, direction: newDirection });
+      const aValue = a[sortConfig.column];
+      const bValue = b[sortConfig.column];
 
-    if (!newDirection) {
-      setComplaints(initialComplaints);
-      return;
-    }
-
-    const sortedComplaints = [...complaints].sort((a, b) => {
-      const aValue = a[column];
-      const bValue = b[column];
-
-      if (!aValue || !bValue) return 0;
-
-      if (newDirection === 'asc') {
-        return String(aValue).localeCompare(String(bValue));
-      } else {
-        return String(bValue).localeCompare(String(aValue));
+      // Manejo especial para fechas
+      if (sortConfig.column === 'dueDate' || sortConfig.column === 'entryDate' || sortConfig.column === 'createdAt') {
+        const dateA = new Date(aValue as string).getTime();
+        const dateB = new Date(bValue as string).getTime();
+        return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
       }
+
+      // Manejo para strings y otros tipos
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
 
-    setComplaints(sortedComplaints);
+    return sorted;
+  }, [initialComplaints, sortConfig]);
+
+  const handleSort = (column: keyof ComplaintType) => {
+    setSortConfig(prev => ({
+      column,
+      direction: prev.column === column && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
 
   const handleRowSelect = (id: string) => {
@@ -106,7 +105,7 @@ export function ComplaintsTable({
       }
 
       try {
-        const selectedComplaints = complaints.filter(c => selectedRows.includes(c.id));
+        const selectedComplaints = sortedComplaints.filter(c => selectedRows.includes(c.id));
 
         if (selectedComplaints.length === 0) {
           toast.error('Error al exportar', {
@@ -137,11 +136,32 @@ export function ComplaintsTable({
     }
   };
 
-  const SortIcon = ({ column }: { column: keyof ComplaintType }) => {
-    if (sort.column !== column) return <ArrowUpDown className="h-4 w-4 ml-1" />;
-    if (sort.direction === 'asc') return <ArrowUp className="h-4 w-4 ml-1" />;
-    if (sort.direction === 'desc') return <ArrowDown className="h-4 w-4 ml-1" />;
-    return <ArrowUpDown className="h-4 w-4 ml-1" />;
+  const SortIcon = ({ column, sortConfig }: { column: keyof ComplaintType, sortConfig: SortConfig }) => {
+    if (sortConfig.column !== column) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc'
+      ? <ArrowUp className="h-4 w-4 ml-1 text-blue-600" />
+      : <ArrowDown className="h-4 w-4 ml-1 text-blue-600" />;
+  };
+
+  // Función para formatear fechas
+  const formatDate = (dateStr: string) => {
+    try {
+      return format(parseISO(dateStr), 'dd/MM/yy');
+    } catch (error) {
+      return dateStr;
+    }
+  };
+
+  // Función para verificar si una actualización es de hoy
+  const isUpdateFromToday = (update: { date: string; time: string }) => {
+    try {
+      const updateDate = parseISO(`${update.date} ${update.time}`);
+      return isToday(updateDate);
+    } catch {
+      return false;
+    }
   };
 
   return (
@@ -157,10 +177,10 @@ export function ComplaintsTable({
           <TableRow>
             <TableHead className="w-[50px]">
               <Checkbox
-                checked={selectedRows.length === complaints.length}
+                checked={selectedRows.length === sortedComplaints.length}
                 onCheckedChange={(checked) => {
                   onSelectedRowsChange(checked
-                    ? complaints.map(c => c.id)
+                    ? sortedComplaints.map(c => c.id)
                     : []
                   );
                 }}
@@ -173,7 +193,7 @@ export function ComplaintsTable({
                 className="h-8 text-left font-medium flex items-center"
               >
                 Denuncia
-                <SortIcon column="id" />
+                <SortIcon column="id" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead>
@@ -183,7 +203,7 @@ export function ComplaintsTable({
                 className="h-8 text-left font-medium flex items-center"
               >
                 Empleador
-                <SortIcon column="companyName" />
+                <SortIcon column="companyName" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead>
@@ -193,7 +213,7 @@ export function ComplaintsTable({
                 className="h-8 text-left font-medium flex items-center"
               >
                 Denunciante
-                <SortIcon column="victimName" />
+                <SortIcon column="victimName" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead>
@@ -203,7 +223,7 @@ export function ComplaintsTable({
                 className="h-8 text-left font-medium flex items-center"
               >
                 Estado
-                <SortIcon column="status" />
+                <SortIcon column="status" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead>
@@ -212,8 +232,8 @@ export function ComplaintsTable({
                 onClick={() => handleSort('entryDate')}
                 className="h-8 text-left font-medium flex items-center"
               >
-                Fecha de creación
-                <SortIcon column="entryDate" />
+                Fecha de ingreso
+                <SortIcon column="entryDate" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead>
@@ -223,7 +243,7 @@ export function ComplaintsTable({
                 className="h-8 text-left font-medium flex items-center"
               >
                 Plazo a vencer
-                <SortIcon column="dueDate" />
+                <SortIcon column="dueDate" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead>
@@ -233,19 +253,19 @@ export function ComplaintsTable({
                 className="h-8 text-left font-medium flex items-center"
               >
                 Completitud
-                <SortIcon column="dueDate" />
+                <SortIcon column="dueDate" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead className="w-[50px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {initialComplaints.map((complaint) => (
+          {sortedComplaints.map((complaint) => (
             <TableRow
               key={complaint.id}
               className={cn(
                 "transition-colors",
-                isToday(complaint.lastUpdate) && "bg-blue-50/50"
+                isUpdateFromToday(complaint.lastUpdate) && "bg-blue-50/50"
               )}
             >
               <TableCell>
@@ -278,13 +298,9 @@ export function ComplaintsTable({
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-500">Última actividad</span>
                             <div className="text-sm font-medium">
-                              {complaint.lastActivity.text}
+                              {complaint.lastActivity.description}
                               <span className="text-gray-500 ml-2 text-xs">
-                                {complaint.lastActivity.date instanceof Date ? (
-                                  `(${format(complaint.lastActivity.date, 'dd/MM/yyyy HH:mm', { locale: es })})`
-                                ) : (
-                                  '(Fecha no disponible)'
-                                )}
+                                {`(${complaint.lastActivity.date} ${complaint.lastActivity.time})`}
                               </span>
                             </div>
                           </div>
@@ -327,18 +343,23 @@ export function ComplaintsTable({
               <TableCell className="text-left px-6">{complaint.companyName}</TableCell>
               <TableCell className="text-left px-6">{complaint.victimName}</TableCell>
               <TableCell className="text-left px-6">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[complaint.status as StatusType].color}`}>
-                  {complaint.status}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[complaint.status as StatusType]?.color || 'bg-gray-100 text-gray-800'
+                    }`}
+                >
+                  {statusAliases[complaint.status as StatusType] || complaint.status}
                 </span>
               </TableCell>
-              <TableCell className="text-left px-6">{complaint.entryDate}</TableCell>
+              <TableCell className="text-left px-6">
+                {formatDate(complaint.entryDate)}
+              </TableCell>
               <TableCell className="text-left px-6">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${getDueStatus(complaint.dueDate) === 'onTime' ? 'bg-green-500' :
                     getDueStatus(complaint.dueDate) === 'warning' ? 'bg-yellow-500' :
                       'bg-red-500'
                     }`} />
-                  {complaint.dueDate}
+                  {formatDate(complaint.dueDate)}
                 </div>
               </TableCell>
               <TableCell className="text-center px-6">{complaint.step}</TableCell>

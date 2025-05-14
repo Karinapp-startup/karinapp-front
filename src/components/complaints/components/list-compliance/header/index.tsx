@@ -9,6 +9,7 @@ import { AdvancedSearch } from "@/components/complaints/components/list-complian
 import { TransitionLoading } from "@/components/complaints/components/new-complaint/components/TransitionLoading";
 import { useDebounce } from "@/hooks/use-debounce";
 import { DateRange } from "react-day-picker";
+import { ComplaintType } from "../complements/types";
 
 interface HeaderProps {
   selectedCount: number;
@@ -20,9 +21,16 @@ interface HeaderProps {
     status?: string;
     dateRange?: DateRange;
   }) => void;
+  complaints: ComplaintType[];
 }
 
-export function ComplaintsHeader({ selectedCount, onExport, onSearch, onApplyFilters }: HeaderProps) {
+export function ComplaintsHeader({ 
+  selectedCount, 
+  onExport, 
+  onSearch, 
+  onApplyFilters, 
+  complaints = []
+}: HeaderProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,12 +71,13 @@ export function ComplaintsHeader({ selectedCount, onExport, onSearch, onApplyFil
           <div className="flex items-center gap-4">
             <Input
               placeholder="Busca por ID de denuncia o empleador"
-              className="w-96 placeholder-gray-500 border-gray-500"
-              value={searchTerm}
-              onChange={handleSearch}
+              className="w-96"
+              onChange={(e) => onSearch(e.target.value)}
             />
-            {/* <AdvancedSearch /> */}
-            <AdvancedSearch onApplyFilters={onApplyFilters} />
+            <AdvancedSearch 
+              onApplyFilters={onApplyFilters}
+              complaints={complaints}
+            />
           </div>
           <div className="flex items-center gap-2">
             <Button

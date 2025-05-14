@@ -12,13 +12,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { ComplaintsPagination } from "./pagination";
 import { DateRange } from "react-day-picker";
-import { format } from "date-fns";
+import { format, parseISO, startOfDay, endOfDay, isAfter, isBefore, isWithinInterval } from "date-fns";
 
 interface ComplaintsProps {
   complaints: ComplaintType[];
 }
 
-export function Complaints({ complaints }: ComplaintsProps) {
+export function Complaints({ complaints = [] }: ComplaintsProps) {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [isNewComplaintOpen, setIsNewComplaintOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +29,7 @@ export function Complaints({ complaints }: ComplaintsProps) {
     status?: string;
     dateRange?: DateRange;
   }>({});
-  
+
   const itemsPerPage = 10;
 
   const handleExport = () => {
@@ -72,53 +72,86 @@ export function Complaints({ complaints }: ComplaintsProps) {
     }
   };
 
+  const handleApplyFilters = (filters: {
+    employer?: string;
+    complainant?: string;
+    status?: string;
+    dateRange?: DateRange;
+  }) => {
+    setAdvancedFilters(filters);
+    setCurrentPage(1); // Resetear a la primera página cuando se aplican filtros
+  };
+
   const filteredComplaints = useMemo(() => {
-    let result = complaints;
+    return complaints.filter(complaint => {
+      let passes = true;
 
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      result = result.filter((complaint) => {
-        const searchableFields = {
-          id: complaint.id,
-          employer: complaint.companyName,
-          status: complaint.status,
-        };
-
-        return Object.values(searchableFields).some((value) =>
-          value?.toString().toLowerCase().includes(searchLower)
+      // Filtro por término de búsqueda
+      if (searchTerm) {
+        const searchTermLower = searchTerm.toLowerCase();
+        passes = passes && (
+          complaint.id.toLowerCase().includes(searchTermLower) ||
+          complaint.companyName.toLowerCase().includes(searchTermLower) ||
+          complaint.victimName.toLowerCase().includes(searchTermLower)
         );
-      });
-    }
+      }
 
-    // Filtros avanzados
-    if (advancedFilters.employer) {
-      result = result.filter((c) => c.companyName === advancedFilters.employer);
-    }
-    if (advancedFilters.complainant) {
-      result = result.filter((c) => c.victimName === advancedFilters.complainant);
-    }
-    if (advancedFilters.status) {
-      result = result.filter((c) => c.status.toLowerCase() === advancedFilters.status);
-    }
-    if (advancedFilters.dateRange?.from && advancedFilters.dateRange?.to) {
-      result = result.filter((c) => {
-        const entry = new Date(c.entryDate);
-        return entry >= advancedFilters.dateRange!.from! && entry <= advancedFilters.dateRange!.to!;
-      });
-    }
+      // Filtro por empleador
+      if (advancedFilters.employer) {
+        passes = passes && complaint.companyName === advancedFilters.employer;
+      }
 
-    return result;
+      // Filtro por denunciante
+      if (advancedFilters.complainant) {
+        passes = passes && complaint.victimName === advancedFilters.complainant;
+      }
+
+      // Filtro por estado
+      if (advancedFilters.status) {
+        passes = passes && complaint.status.toLowerCase() === advancedFilters.status.toLowerCase();
+      }
+
+      // Filtro por rango de fechas de vencimiento
+      if (advancedFilters.dateRange?.from && advancedFilters.dateRange?.to) {
+        try {
+          // Convertir la fecha de la denuncia (DD/MM/YY) a objeto Date
+          const [day, month, year] = complaint.dueDate.split('/').map(Number);
+          const complaintDate = new Date(2000 + year, month - 1, day);
+
+          // Convertir las fechas del filtro
+          const fromDate = startOfDay(advancedFilters.dateRange.from);
+          const toDate = endOfDay(advancedFilters.dateRange.to);
+
+          // Verificar si la fecha está dentro del rango
+          passes = passes && complaintDate >= fromDate && complaintDate <= toDate;
+
+          // Debug
+          console.log({
+            complaintDate,
+            fromDate,
+            toDate,
+            passes,
+            complaint: complaint.dueDate
+          });
+        } catch (error) {
+          console.error('Error al procesar fecha:', error);
+          passes = false;
+        }
+      }
+
+      return passes;
+    });
   }, [complaints, searchTerm, advancedFilters]);
 
-  const totalPages = Math.ceil(filteredComplaints.length / itemsPerPage);
-  
-  const paginatedComplaints = filteredComplaints.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Calcular la paginación después del filtrado
+  const paginatedComplaints = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredComplaints.slice(start, end);
+  }, [filteredComplaints, currentPage, itemsPerPage]);
 
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
+    if (page < 1 || page > Math.ceil(filteredComplaints.length / itemsPerPage)) return;
     setCurrentPage(page);
   };
 
@@ -140,10 +173,8 @@ export function Complaints({ complaints }: ComplaintsProps) {
         selectedCount={selectedRows.length}
         onExport={handleExport}
         onSearch={handleSearch}
-        onApplyFilters={(filters) => {
-          setSearchTerm("");
-          setAdvancedFilters(filters);
-        }}
+        onApplyFilters={handleApplyFilters}
+        complaints={complaints}
       />
 
       {Object.values(advancedFilters).some(Boolean) && (
@@ -183,7 +214,7 @@ export function Complaints({ complaints }: ComplaintsProps) {
           )}
           {advancedFilters.dateRange?.from && advancedFilters.dateRange?.to && (
             <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
-              📅 {format(advancedFilters.dateRange.from, "dd/MM/yy")} - {format(advancedFilters.dateRange.to, "dd/MM/yy")}
+              📅 Vencimiento: {format(advancedFilters.dateRange.from, "dd/MM/yy")} - {format(advancedFilters.dateRange.to, "dd/MM/yy")}
               <button
                 onClick={() => handleRemoveFilter("dateRange")}
                 className="ml-2 text-red-500 hover:text-red-700"
@@ -203,7 +234,7 @@ export function Complaints({ complaints }: ComplaintsProps) {
 
       <ComplaintsPagination
         currentPage={currentPage}
-        totalPages={totalPages}
+        totalPages={Math.ceil(filteredComplaints.length / itemsPerPage)}
         onPageChange={handlePageChange}
       />
 

@@ -1,7 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -9,178 +16,312 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CalendarIcon, Filter, X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import { DateRange } from "react-day-picker";
-import { format } from "date-fns";
-
-import { complaintsMockData } from "@/components/complaints/components/list-compliance/complements/data/mockData";
 import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { ComplaintType, statusAliases, StatusType } from "../complements/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { addDays } from "date-fns";
+import { Label } from "@/components/ui/label";
 
-interface AdvancedSearchProps extends React.HTMLAttributes<HTMLDivElement> {
+interface AdvancedSearchProps {
   onApplyFilters: (filters: {
     employer?: string;
     complainant?: string;
     status?: string;
     dateRange?: DateRange;
   }) => void;
+  complaints: ComplaintType[];
 }
 
-export const AdvancedSearch = React.forwardRef<HTMLDivElement, AdvancedSearchProps>(
-  ({ onApplyFilters, ...props }, ref) => {
-    const [selectedStatus, setSelectedStatus] = React.useState<string>();
-    const [selectedEmployer, setSelectedEmployer] = React.useState<string>();
-    const [selectedComplainant, setSelectedComplainant] = React.useState<string>();
-    const [dateFrom, setDateFrom] = useState<Date>();
-    const [dateTo, setDateTo] = useState<Date>();
+const statusColors: Record<StatusType, string> = {
+  'recibida': 'text-purple-600 bg-purple-50',
+  'finalizada': 'text-green-600 bg-green-50',
+  'en_proceso': 'text-blue-600 bg-blue-50',
+  'derivada_dt': 'text-orange-600 bg-orange-50',
+  'adopcion_sanciones': 'text-red-600 bg-red-50',
+  'esperando_dt': 'text-yellow-600 bg-yellow-50',
+  'observaciones_dt': 'text-gray-600 bg-gray-50',
+  'aviso_inicio_investigacion': 'text-indigo-600 bg-indigo-50'
+};
 
-    const uniqueEmployers = Array.from(new Set(complaintsMockData.map(c => c.companyName)));
-    const uniqueComplainants = Array.from(new Set(complaintsMockData.map(c => c.victimName)));
-    const uniqueStatuses = Array.from(new Set(complaintsMockData.map(c => c.status.toLowerCase())));
+const getStatusColor = (status: string): string => {
+  const normalizedStatus = status.toLowerCase().replace(' ', '_') as StatusType;
+  return statusColors[normalizedStatus] || 'bg-white hover:bg-gray-50';
+};
 
-    const handleApplyFilters = () => {
-      console.log('Filtros aplicados:', {
-        status: selectedStatus,
-        employer: selectedEmployer,
-        complainant: selectedComplainant,
-        dateRange: dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined,
-      });
-      onApplyFilters({
-        status: selectedStatus,
-        employer: selectedEmployer,
-        complainant: selectedComplainant,
-        dateRange: dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined,
-      });
-    };
+export function AdvancedSearch({ onApplyFilters, complaints = [] }: AdvancedSearchProps) {
+  const [open, setOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    employer: "",
+    complainant: "",
+    status: "",
+    dateRange: undefined as DateRange | undefined,
+  });
+  const [date, setDate] = useState<DateRange | undefined>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    const renderDatePicker = (
-      label: string,
-      date: Date | undefined,
-      setDate: (date: Date | undefined) => void,
-      placeholder: string
-    ) => (
-      <div>
-        <Label className="text-sm font-medium text-gray-700">{label}</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left font-normal mt-1.5 bg-white border-gray-200"
+  const uniqueEmployers = useMemo(() =>
+    Array.from(new Set((complaints || []).map(c => c.companyName))).sort()
+    , [complaints]);
+
+  const uniqueComplainants = useMemo(() =>
+    Array.from(new Set((complaints || []).map(c => c.victimName))).sort()
+    , [complaints]);
+
+  const uniqueStatuses = useMemo(() =>
+    Array.from(new Set((complaints || []).map(c => c.status))).sort()
+    , [complaints]);
+
+  const handleApplyFilters = () => {
+    onApplyFilters(filters);
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Filtros avanzados</Button>
+      </DialogTrigger>
+      <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[425px] bg-white p-6 rounded-lg shadow-lg">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-medium">Filtros avanzados</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Empleador</label>
+            <Select
+              value={filters.employer}
+              onValueChange={(value) =>
+                setFilters({ ...filters, employer: value })
+              }
             >
-              {date ? format(date, "dd/MM/yy") : <span className="text-gray-500">{placeholder}</span>}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 bg-white border border-gray-200">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-    );
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder="Selecciona un empleador de la lista" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {uniqueEmployers.map(employer => (
+                  <SelectItem key={employer} value={employer} className="bg-white hover:bg-gray-50">
+                    {employer}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filtros avanzados
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Denunciante</label>
+            <Select
+              value={filters.complainant}
+              onValueChange={(value) =>
+                setFilters({ ...filters, complainant: value })
+              }
+            >
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder="Selecciona un denunciante de la lista" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {uniqueComplainants.map(complainant => (
+                  <SelectItem key={complainant} value={complainant} className="bg-white hover:bg-gray-50">
+                    {complainant}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Estado</label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) =>
+                setFilters({ ...filters, status: value })
+              }
+            >
+              <SelectTrigger className="w-full bg-white">
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+              <SelectContent className="bg-white">
+                {uniqueStatuses.map(status => (
+                  <SelectItem
+                    key={status}
+                    value={status.toLowerCase()}
+                    className={`${getStatusColor(status)} rounded-md px-2 py-1 my-1`}
+                  >
+                    {statusAliases[status as StatusType] || status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Plazo de vencimiento</label>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="w-full sm:w-1/2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-white border-gray-200",
+                        !filters.dateRange?.from && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-gray-500" />
+                      <span className="truncate">
+                        {filters.dateRange?.from ? (
+                          format(filters.dateRange.from, "PPP", { locale: es })
+                        ) : (
+                          "Selecciona fecha desde"
+                        )}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 bg-white border border-gray-200 shadow-lg"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateRange?.from}
+                      onSelect={(date) => {
+                        setFilters({
+                          ...filters,
+                          dateRange: {
+                            ...filters.dateRange,
+                            from: date || new Date(),
+                          } as DateRange,
+                        });
+                        // Cerrar el popover después de seleccionar
+                        const popover = document.activeElement as HTMLElement;
+                        popover?.blur();
+                      }}
+                      initialFocus
+                      className="bg-white rounded-lg"
+                      locale={es}
+                      classNames={{
+                        day_selected: "bg-blue-600 text-white",
+                        day_today: "bg-gray-100 text-gray-900",
+                      }}
+                      formatters={{
+                        formatCaption: (date, options) => {
+                          return format(date, "LLLL yyyy", { locale: es }).replace(/^\w/, c => c.toUpperCase());
+                        },
+                        formatWeekdayName: (date) => {
+                          return format(date, "EEEEEE", { locale: es }).toUpperCase();
+                        },
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="w-full sm:w-1/2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-white border-gray-200",
+                        !filters.dateRange?.to && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-gray-500" />
+                      <span className="truncate">
+                        {filters.dateRange?.to ? (
+                          format(filters.dateRange.to, "PPP", { locale: es })
+                        ) : (
+                          "Selecciona fecha hasta"
+                        )}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 bg-white border border-gray-200 shadow-lg"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={filters.dateRange?.to}
+                      onSelect={(date) => {
+                        setFilters({
+                          ...filters,
+                          dateRange: {
+                            ...filters.dateRange,
+                            to: date || addDays(new Date(), 7),
+                          } as DateRange,
+                        });
+                        // Cerrar el popover después de seleccionar
+                        const popover = document.activeElement as HTMLElement;
+                        popover?.blur();
+                      }}
+                      initialFocus
+                      className="bg-white rounded-lg"
+                      locale={es}
+                      classNames={{
+                        day_selected: "bg-blue-600 text-white",
+                        day_today: "bg-gray-100 text-gray-900",
+                      }}
+                      formatters={{
+                        formatCaption: (date, options) => {
+                          return format(date, "LLLL yyyy", { locale: es }).replace(/^\w/, c => c.toUpperCase());
+                        },
+                        formatWeekdayName: (date) => {
+                          return format(date, "EEEEEE", { locale: es }).toUpperCase();
+                        },
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setFilters({
+                employer: "",
+                complainant: "",
+                status: "",
+                dateRange: undefined,
+              });
+            }}
+          >
+            Cancelar
           </Button>
-        </DialogTrigger>
-        
-        <DialogContent className="sm:max-w-[425px] bg-white shadow-lg border-0" ref={ref}>
-          <DialogHeader className="border-b pb-4">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-semibold">Filtros avanzados</DialogTitle>
-            </div>
-          </DialogHeader>
-          <div className="grid gap-6 py-6">
-            <div className="space-y-4">
-              {/* Empleador */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Empleador</Label>
-                <Select onValueChange={setSelectedEmployer}>
-                  <SelectTrigger className="mt-1.5 w-full bg-white border-gray-200">
-                    <SelectValue placeholder="Selecciona un empleador de la lista" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    {uniqueEmployers.map(employer => (
-                      <SelectItem key={employer} value={employer}>
-                        {employer}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Empleador */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Denunciante</Label>
-                <Select onValueChange={setSelectedComplainant}>
-                  <SelectTrigger className="mt-1.5 w-full bg-white border-gray-200">
-                    <SelectValue placeholder="Selecciona un denunciante de la lista" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    {uniqueComplainants.map(name => (
-                      <SelectItem key={name} value={name}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Estado */}
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Estado</Label>
-                <Select onValueChange={setSelectedStatus}>
-                  <SelectTrigger className="mt-1.5 w-full bg-white border-gray-200">
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    {uniqueStatuses.map(status => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Rango de fechas */}
-              <div className="grid grid-cols-2 gap-4">
-                {renderDatePicker("Fecha desde", dateFrom, setDateFrom, "Ej. 12/12/12")}
-                {renderDatePicker("Fecha hasta", dateTo, setDateTo, "Ej. 12/01/13")}
-              </div>
-            </div>
-          </div>
-          {/* Botones */}
-          <div className="flex items-center justify-between border-t pt-4">
-            <div className="flex gap-2">
-              <DialogClose asChild>
-                <Button variant="outline">Cancelar</Button>
-              </DialogClose>
-            </div>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={handleApplyFilters}
-            >
-              Guardar filtros
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-});
-
-AdvancedSearch.displayName = "AdvancedSearch"; 
+          <Button
+            variant="outline"
+            onClick={() => {
+              setFilters({
+                employer: "",
+                complainant: "",
+                status: "",
+                dateRange: undefined,
+              });
+              onApplyFilters({
+                employer: "",
+                complainant: "",
+                status: "",
+                dateRange: undefined,
+              });
+            }}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            Limpiar filtros
+          </Button>
+          <Button onClick={handleApplyFilters} className="bg-blue-600 text-white">
+            Guardar filtros
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+} 
