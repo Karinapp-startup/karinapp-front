@@ -35,6 +35,21 @@ interface DetailModalProps {
 }
 
 export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
+  // Extraer solo el número de la etapa (antes del "/")
+  const currentStep = complaint.step.split('/')[0];
+
+  // Componente EditButton que se muestra si no es etapa 9
+  const EditButton = () => {
+    if (currentStep === "9") return null;
+
+    return (
+      <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
+        <Edit2 className="h-4 w-4 mr-2" />
+        Editar
+      </Button>
+    );
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -62,7 +77,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                   variant="outline"
                   className="bg-gray-100 text-gray-700 border-gray-200 text-base px-4 py-1"
                 >
-                  #F1239
+                  #{complaint.id}
                 </Badge>
               </div>
             </div>
@@ -70,9 +85,14 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
             <div className="flex items-center gap-3">
               <Badge
                 variant="outline"
-                className="bg-blue-50 text-blue-700 px-4 py-1"
+                className={cn(
+                  "px-4 py-1",
+                  currentStep === "9"
+                    ? "bg-gray-100 text-gray-700"
+                    : "bg-blue-50 text-blue-700"
+                )}
               >
-                Etapa {complaint.step}/9
+                Etapa {currentStep}/9
               </Badge>
               <Badge
                 className={cn(
@@ -85,6 +105,16 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 Prioridad {complaint.priority}
               </Badge>
             </div>
+
+            {currentStep === "9" && (
+              <Alert className="mt-4 bg-gray-50">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Denuncia cerrada</AlertTitle>
+                <AlertDescription>
+                  Esta denuncia está cerrada y no puede ser editada.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Alert para denuncias prioritarias */}
@@ -108,10 +138,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Selección del empleador
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="grid grid-cols-2 gap-4 bg-white p-2">
                 <div>
@@ -131,10 +158,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Datos de la víctima
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="grid grid-cols-2 gap-4 bg-white p-2">
                 <div>
@@ -170,10 +194,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Datos del denunciante
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="grid grid-cols-2 gap-4 bg-white p-2">
                 <div>
@@ -209,10 +230,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Datos de el o los denunciados
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
 
               {/* Denunciado 1 */}
@@ -284,10 +302,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Sobre la relación entre víctima y denunciado/a
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm">
@@ -303,10 +318,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Testigos
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="overflow-hidden border rounded-lg">
                 <table className="w-full">
@@ -344,10 +356,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Hechos denunciados
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="bg-white p-4 border rounded-lg">
                 <p className="text-sm text-gray-600 whitespace-pre-line">
@@ -367,10 +376,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Situaciones que se denuncian
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="bg-blue-50 p-4 rounded-lg space-y-2">
                 <p className="text-sm font-medium">Acoso laboral</p>
@@ -386,10 +392,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Medidas de resguardo
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-4">
@@ -415,10 +418,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Resumen de la denuncia
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="bg-white p-4 border rounded-lg">
                 <p className="text-sm text-gray-600 whitespace-pre-line">
@@ -438,10 +438,7 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
                 <h3 className="text-sm text-gray-500 uppercase tracking-wide font-medium">
                   Investigación se llevará a cabo por
                 </h3>
-                <Button variant="ghost" size="sm" className="h-8 text-blue-600 hover:bg-blue-50">
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
+                <EditButton />
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-gray-600">[Empleador seleccionado en el paso 1]</p>
@@ -480,9 +477,11 @@ export function DetailModal({ complaint, isOpen, onClose }: DetailModalProps) {
               >
                 Cerrar
               </Button>
-              <Button className="bg-blue-600 text-white hover:bg-blue-700">
-                Guardar cambios
-              </Button>
+              {currentStep !== "9" && (
+                <Button className="bg-blue-600 text-white hover:bg-blue-700">
+                  Guardar cambios
+                </Button>
+              )}
             </div>
           </div>
         </div>

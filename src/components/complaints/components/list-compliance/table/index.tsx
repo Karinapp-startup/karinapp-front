@@ -213,6 +213,7 @@ export function ComplaintsTable({
 
   // Agregar estado para controlar el modal
   const [selectedComplaint, setSelectedComplaint] = useState<ComplaintType | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   return (
     <>
@@ -460,7 +461,10 @@ export function ComplaintsTable({
                           variant="default"
                           size="icon"
                           className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700"
-                          onClick={() => setSelectedComplaint(complaint)}
+                          onClick={() => {
+                            setSelectedComplaint(complaint);
+                            setIsDetailModalOpen(true);
+                          }}
                         >
                           <Eye className="h-4 w-4 text-white" />
                         </Button>
@@ -484,8 +488,8 @@ export function ComplaintsTable({
       {selectedComplaint && (
         <DetailModal
           complaint={selectedComplaint}
-          isOpen={!!selectedComplaint}
-          onClose={() => setSelectedComplaint(null)}
+          isOpen={isDetailModalOpen}
+          onClose={() => setIsDetailModalOpen(false)}
         />
       )}
     </>
