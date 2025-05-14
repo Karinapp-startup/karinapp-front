@@ -80,6 +80,12 @@ export function ComplaintsTable({
     direction: 'desc'
   });
 
+  // Función para convertir fecha de formato "DD/MM/YY" a Date
+  const parseCustomDate = (dateStr: string): Date => {
+    const [day, month, year] = dateStr.split('/').map(Number);
+    return new Date(2000 + year, month - 1, day);
+  };
+
   // Función para ordenar los datos
   const sortedComplaints = useMemo(() => {
     const sorted = [...initialComplaints].sort((a, b) => {
@@ -88,8 +94,24 @@ export function ComplaintsTable({
       const aValue = a[sortConfig.column];
       const bValue = b[sortConfig.column];
 
-      // Manejo especial para fechas
-      if (sortConfig.column === 'dueDate' || sortConfig.column === 'entryDate' || sortConfig.column === 'createdAt') {
+      // Manejo especial para el campo step (formato "X/9")
+      if (sortConfig.column === 'step') {
+        const stepA = parseInt((aValue as string).split('/')[0]);
+        const stepB = parseInt((bValue as string).split('/')[0]);
+        return sortConfig.direction === 'asc' ? stepA - stepB : stepB - stepA;
+      }
+
+      // Manejo especial para fechas en formato DD/MM/YY
+      if (sortConfig.column === 'dueDate' || sortConfig.column === 'entryDate') {
+        const dateA = parseCustomDate(aValue as string);
+        const dateB = parseCustomDate(bValue as string);
+        return sortConfig.direction === 'asc'
+          ? dateA.getTime() - dateB.getTime()
+          : dateB.getTime() - dateA.getTime();
+      }
+
+      // Manejo para createdAt que podría tener otro formato
+      if (sortConfig.column === 'createdAt') {
         const dateA = new Date(aValue as string).getTime();
         const dateB = new Date(bValue as string).getTime();
         return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
@@ -273,11 +295,11 @@ export function ComplaintsTable({
             <TableHead>
               <Button
                 variant="ghost"
-                onClick={() => handleSort('dueDate')}
+                onClick={() => handleSort('step')}
                 className="h-8 text-left font-medium flex items-center"
               >
                 Completitud
-                <SortIcon column="dueDate" sortConfig={sortConfig} />
+                <SortIcon column="step" sortConfig={sortConfig} />
               </Button>
             </TableHead>
             <TableHead className="w-[50px]" />
@@ -422,18 +444,29 @@ export function ComplaintsTable({
                   {formatDate(complaint.dueDate)}
                 </div>
               </TableCell>
-              <TableCell className="text-center px-6">{complaint.step}</TableCell>
+              <TableCell className="text-center px-6">
+                <span className="text-sm font-medium">{complaint.step}</span>
+              </TableCell>
               <TableCell>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
-                  onClick={() => {
-                    // Lógica para abrir modal de edición o similar
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="default"
+                        size="icon"
+                        className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Eye className="h-4 w-4 text-white" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      className="bg-white p-2 shadow-lg border rounded-lg"
+                      sideOffset={5}
+                    >
+                      <p className="text-sm">Ver Detalle Denuncia</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </TableCell>
             </TableRow>
           ))}

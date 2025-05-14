@@ -41,7 +41,7 @@ export const complaintsMockData: ComplaintType[] = [
       description: "Última actualización del caso"
     },
     activities: generateActivities("F1239"),
-    step: 1,
+    step: "1/9",
     priority: "high",
     assignedTo: "Ana Martínez"
   },
@@ -55,7 +55,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Carlos Ruiz",
-    step: 9,
+    step: "9/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -77,7 +77,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "medium",
     assignedTo: "Ana Martínez",
-    step: 2,
+    step: "2/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -99,7 +99,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Pedro Soto",
-    step: 7,
+    step: "7/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -121,7 +121,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "medium",
     assignedTo: "Laura Vega",
-    step: 8,
+    step: "8/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -143,7 +143,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Diego Muñoz",
-    step: 6,
+    step: "6/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -165,7 +165,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Carmen Silva",
-    step: 6,
+    step: "6/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -187,7 +187,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "medium",
     assignedTo: "Roberto Parra",
-    step: 4,
+    step: "4/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -209,7 +209,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Claudia Rojas",
-    step: 7,
+    step: "8/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -231,7 +231,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Claudia Rojas",
-    step: 7,
+    step: "6/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -253,7 +253,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Felipe Ortiz",
-    step: 9,
+    step: "6/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),
@@ -275,7 +275,7 @@ export const complaintsMockData: ComplaintType[] = [
     createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Felipe Ortiz",
-    step: 9,
+    step: "4/9",
     lastActivity: {
       date: formatDate(new Date()),
       time: formatTime(new Date()),

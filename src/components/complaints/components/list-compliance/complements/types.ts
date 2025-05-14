@@ -63,7 +63,7 @@ export interface ComplaintType {
     time: string;
     description: string;
   }>;
-  step: number;
+  step: string;
   priority: 'high' | 'medium' | 'low';
   assignedTo: string;
 } 
