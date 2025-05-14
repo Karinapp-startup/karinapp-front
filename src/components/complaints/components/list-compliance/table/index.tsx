@@ -53,6 +53,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DetailModal } from "../detailModal";
+import { useRouter } from "next/navigation";
+import { Spinner } from "@/components/common/spinner";
 
 interface ComplaintsTableProps {
   complaints: ComplaintType[];
@@ -80,6 +82,10 @@ export function ComplaintsTable({
     column: 'entryDate',
     direction: 'desc'
   });
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedComplaint, setSelectedComplaint] = useState<ComplaintType | null>(null);
 
   // Función para convertir fecha de formato "DD/MM/YY" a Date
   const parseCustomDate = (dateStr: string): Date => {
@@ -211,9 +217,13 @@ export function ComplaintsTable({
     }
   };
 
-  // Agregar estado para controlar el modal
-  const [selectedComplaint, setSelectedComplaint] = useState<ComplaintType | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const handleEditComplaint = (complaint: ComplaintType) => {
+    setIsLoading(true);
+    setIsDetailModalOpen(false);
+    setTimeout(() => {
+      router.push(`/denuncia/${complaint.id}?step=${complaint.step.split('/')[0]}`);
+    }, 2000);
+  };
 
   return (
     <>
@@ -490,8 +500,12 @@ export function ComplaintsTable({
           complaint={selectedComplaint}
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
+          onEdit={handleEditComplaint}
+          isLoading={isLoading}
         />
       )}
+
+      {isLoading && <Spinner />}
     </>
   );
 } 

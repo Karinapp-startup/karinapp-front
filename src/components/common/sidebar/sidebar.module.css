@@ -1,0 +1,64 @@
+.logoContainer {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #2563eb;
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.logo {
+  transition: all 0.3s ease;
+}
+
+.logoContainer:hover {
+  background: linear-gradient(45deg, #3b82f6, #9333ea);
+}
+
+.logoContainer:hover .logo {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  transform: scale(1.1) rotate(360deg);
+}
+
+.appName {
+  font-weight: 600;
+  font-size: 1.125rem;
+  background: linear-gradient(to right, #3b82f6, #9333ea);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: all 0.3s ease;
+}
+
+.appName:hover {
+  background-size: 200%;
+  background-position: right;
+  filter: brightness(1.2);
+}
+
+.logoContainer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, #3b82f6, #9333ea, #3b82f6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: rotate 2s linear infinite;
+  z-index: -1;
+}
+
+.logoContainer:hover::before {
+  opacity: 0.3;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} 

@@ -1,0 +1,41 @@
+.logoContainer {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.logo {
+  transition: all 0.3s ease;
+}
+
+.logoContainer:hover .logo {
+  filter: drop-shadow(0 0 8px #3b82f6);
+  transform: scale(1.1);
+}
+
+.logoContainer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, #3b82f6, #9333ea, #3b82f6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: rotate 2s linear infinite;
+  z-index: -1;
+}
+
+.logoContainer:hover::before {
+  opacity: 0.3;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} 

@@ -24,11 +24,11 @@ interface HeaderProps {
   complaints: ComplaintType[];
 }
 
-export function ComplaintsHeader({ 
-  selectedCount, 
-  onExport, 
-  onSearch, 
-  onApplyFilters, 
+export function ComplaintsHeader({
+  selectedCount,
+  onExport,
+  onSearch,
+  onApplyFilters,
   complaints = []
 }: HeaderProps) {
   const router = useRouter();
@@ -46,8 +46,8 @@ export function ComplaintsHeader({
       }
       return;
     }
-  
-    hasRunEmptySearch.current = false; 
+
+    hasRunEmptySearch.current = false;
     onSearch(debouncedSearch);
   }, [debouncedSearch, onSearch]);
 
@@ -74,7 +74,7 @@ export function ComplaintsHeader({
               className="w-96"
               onChange={(e) => onSearch(e.target.value)}
             />
-            <AdvancedSearch 
+            <AdvancedSearch
               onApplyFilters={onApplyFilters}
               complaints={complaints}
             />

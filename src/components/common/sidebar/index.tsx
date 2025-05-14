@@ -25,6 +25,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Spinner } from "../spinner";
+import styles from './sidebar.module.css';
 
 const menuItems = [
   { icon: FileTextIcon, label: "Denuncias", href: "/" },
@@ -62,10 +63,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
       <div className={cn("w-64 min-h-screen bg-white border-r flex flex-col", className)}>
         <div className="p-4 border-b">
           <div className="flex items-center gap-2">
-            <div className="rounded-lg bg-blue-600 p-2">
-              <Shield className="h-6 w-6 text-white" />
+            <div className={styles.logoContainer}>
+              <Shield className={cn("h-6 w-6 text-white", styles.logo)} />
             </div>
-            <span className="font-semibold text-lg">Karin App</span>
+            <span className={styles.appName}>Karin App</span>
           </div>
         </div>
 

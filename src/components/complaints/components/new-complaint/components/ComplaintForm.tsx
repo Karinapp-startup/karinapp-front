@@ -22,7 +22,6 @@ import { ReportedSituationsForm } from "../steps/ReportedSituationsForm";
 import { SafeguardMeasuresForm } from "../steps/SafeguardMeasuresForm";
 import { SummaryForm } from "../steps/SummaryForm";
 import { ReviewForm } from "../steps/ReviewForm";
-import { Loading } from "@/components/common/loading";
 import { ComplaintFormState } from "@/interfaces/complaints/form-state";
 import { EmployerFormData } from "@/interfaces/complaints/forms/employer";
 import { VictimFormData, defaultVictimFormData } from "@/interfaces/complaints/forms/victim";
@@ -36,6 +35,7 @@ import { SafeguardMeasuresFormData } from "@/interfaces/complaints/forms/safegua
 import { SummaryFormData } from "@/interfaces/complaints/forms/summary";
 import { ReviewFormData } from "@/interfaces/complaints/forms/review";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
 
 export function ComplaintForm() {
   const {
@@ -48,6 +48,7 @@ export function ComplaintForm() {
   } = useNewComplaint();
 
   const TOTAL_STEPS = 10;
+  const router = useRouter();
 
   const handleEmployerUpdate = (data: EmployerFormData) => {
     updateFormData({ employer: data });
@@ -254,7 +255,7 @@ export function ComplaintForm() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.history.back()}
+              onClick={() => router.push('/denuncia')}
               className="text-gray-600"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -295,7 +296,7 @@ export function ComplaintForm() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => window.history.back()}
+            onClick={() => router.push('/denuncia')}
             className="text-gray-600"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />

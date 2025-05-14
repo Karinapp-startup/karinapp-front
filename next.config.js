@@ -97,7 +97,7 @@ const nextConfig = {
     async redirects() {
         return [
             {
-                source: '/denuncias/nueva',
+                source: '/denuncia/nueva',
                 destination: '/complaints/new',
                 permanent: true,
             }

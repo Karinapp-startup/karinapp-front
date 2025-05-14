@@ -1,13 +1,22 @@
-export type RelationshipType = 
-  | "asymmetric_victim_dependent"
-  | "asymmetric_accused_dependent"
-  | "symmetric_same_area"
-  | "symmetric_different_area";
+export enum RelationshipType {
+  DIRECT = "direct",
+  INDIRECT = "indirect",
+  NONE = "none"
+}
+
+export enum HierarchyLevel {
+  SUPERIOR = "superior",
+  PEER = "peer",
+  SUBORDINATE = "subordinate"
+}
 
 export interface RelationshipFormData {
-  relationship: RelationshipType;
+  relationship: {
+    type: RelationshipType;
+    hierarchyLevel: HierarchyLevel;
+    description: string;
+  };
   startDate: Date;
-  endDate?: Date;
   isCurrentEmployee: boolean;
   position: string;
   department: string;
@@ -15,7 +24,11 @@ export interface RelationshipFormData {
 
 // Valores por defecto
 export const defaultRelationshipFormData: RelationshipFormData = {
-  relationship: "asymmetric_victim_dependent",
+  relationship: {
+    type: RelationshipType.DIRECT,
+    hierarchyLevel: HierarchyLevel.SUPERIOR,
+    description: ""
+  },
   startDate: new Date(),
   isCurrentEmployee: true,
   position: "",
