@@ -11,8 +11,16 @@ import {
   MoreVertical,
   AlertTriangle,
   Pencil,
+  InfoIcon,
 } from "lucide-react";
-import { ComplaintType, StatusType, SortDirection, SortConfig } from "@/components/complaints/components/list-compliance/complements/types";
+import {
+  ComplaintType,
+  StatusType,
+  SortDirection,
+  SortConfig,
+  statusAliases,
+  getStatusDescription
+} from "@/components/complaints/components/list-compliance/complements/types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -38,13 +46,29 @@ import { getDueStatus } from "@/components/complaints/components/list-compliance
 import { Timeline } from "../timeline";
 import { exportToExcel } from "../complements/utils/export";
 import { useState, useMemo } from "react";
-import { statusAliases } from "../complements/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ComplaintsTableProps {
   complaints: ComplaintType[];
   selectedRows: string[];
   onSelectedRowsChange: (rows: string[]) => void;
 }
+
+const statusColors: Record<StatusType, { bg: string, text: string, hover: string }> = {
+  'recibida': { bg: 'bg-violet-100', text: 'text-violet-800', hover: 'hover:bg-violet-200' },
+  'finalizada': { bg: 'bg-emerald-100', text: 'text-emerald-800', hover: 'hover:bg-emerald-200' },
+  'en_proceso': { bg: 'bg-sky-100', text: 'text-sky-800', hover: 'hover:bg-sky-200' },
+  'derivada_dt': { bg: 'bg-amber-100', text: 'text-amber-800', hover: 'hover:bg-amber-200' },
+  'esperando_dt': { bg: 'bg-orange-100', text: 'text-orange-800', hover: 'hover:bg-orange-200' },
+  'observaciones_dt': { bg: 'bg-rose-100', text: 'text-rose-800', hover: 'hover:bg-rose-200' },
+  'adopcion_sanciones': { bg: 'bg-red-100', text: 'text-red-800', hover: 'hover:bg-red-200' },
+  'aviso_inicio_investigacion': { bg: 'bg-blue-100', text: 'text-blue-800', hover: 'hover:bg-blue-200' }
+};
 
 export function ComplaintsTable({
   complaints: initialComplaints,
@@ -277,12 +301,18 @@ export function ComplaintsTable({
               <TableCell>
                 <HoverCard>
                   <HoverCardTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="font-medium"
-                    >
-                      {complaint.id}
-                    </Button>
+                    <div className="flex items-center gap-1 group cursor-pointer">
+                      <Button
+                        variant="ghost"
+                        className="font-medium relative"
+                      >
+                        {complaint.id}
+                        <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-blue-500 transition-all duration-300 
+                          group-hover:w-full" />
+                      </Button>
+                      <Eye className="h-4 w-4 text-gray-400 transition-all duration-200 
+                        group-hover:text-blue-500" />
+                    </div>
                   </HoverCardTrigger>
                   <HoverCardContent
                     className="w-96 bg-white border shadow-lg backdrop-blur-lg"
@@ -343,12 +373,42 @@ export function ComplaintsTable({
               <TableCell className="text-left px-6">{complaint.companyName}</TableCell>
               <TableCell className="text-left px-6">{complaint.victimName}</TableCell>
               <TableCell className="text-left px-6">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[complaint.status as StatusType]?.color || 'bg-gray-100 text-gray-800'
-                    }`}
-                >
-                  {statusAliases[complaint.status as StatusType] || complaint.status}
-                </span>
+                <div className="flex items-center gap-2 group">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[complaint.status as StatusType]?.bg || 'bg-gray-100'
+                      } ${statusColors[complaint.status as StatusType]?.text || 'text-gray-800'
+                      } ${statusColors[complaint.status as StatusType]?.hover || 'hover:bg-gray-200'
+                      }`}
+                  >
+                    {statusAliases[complaint.status as StatusType] || complaint.status}
+                  </span>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center cursor-help">
+                          <InfoIcon className="h-4 w-4 text-gray-400 transition-all duration-200 
+                            group-hover:text-gray-600 group-hover:scale-110
+                            animate-pulse-subtle" />
+                          <div className="h-[2px] w-0 bg-gray-400 transition-all duration-200 
+                            group-hover:w-full group-hover:bg-gray-600" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        className="bg-white p-3 shadow-lg border rounded-lg max-w-xs"
+                        sideOffset={5}
+                      >
+                        <div className="space-y-2">
+                          <p className="font-medium text-sm">
+                            {statusAliases[complaint.status as StatusType]}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {getStatusDescription(complaint.status as StatusType)}
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </TableCell>
               <TableCell className="text-left px-6">
                 {formatDate(complaint.entryDate)}
