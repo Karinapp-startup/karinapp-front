@@ -39,7 +39,7 @@ export function RootLayoutClient({
         <Toaster 
           theme="light"
           richColors
-          position="top-right"
+          position="bottom-right"
           expand={true}
           closeButton={true}
         />

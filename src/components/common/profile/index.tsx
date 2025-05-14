@@ -118,11 +118,16 @@ export const Profile = () => {
                     <td className="text-right">
                       {person.status === "Inactivo" && (
                         <SendInvitationDialog
+                          type="rle"
                           trigger={
                             <Button variant="outline" size="sm" className="text-sm">
                               Enviar invitación
                             </Button>
                           }
+                          recipientData={{
+                            name: person.name,
+                            rut: person.rut
+                          }}
                         />
                       )}
                     </td>
@@ -152,24 +157,29 @@ export const Profile = () => {
                   { name: "Empresa Minera del Sur", rut: "15.555.666-7", status: "Activo" },
                   { name: "Constructora Nacional	", rut: "15.555.666-7", status: "Inactivo" },
                   { name: "Industrias Metalúrgicas", rut: "15.555.666-7", status: "Activo" }
-                ].map((person, idx) => (
+                ].map((company, idx) => (
                   <tr key={idx} className="border-t border-gray-100">
-                    <td className="py-3 text-sm text-gray-700">{person.name}</td>
-                    <td className="text-sm text-gray-700">{person.rut}</td>
+                    <td className="py-3 text-sm text-gray-700">{company.name}</td>
+                    <td className="text-sm text-gray-700">{company.rut}</td>
                     <td>
-                      <Badge variant={person.status === "Activo" ? "default" : "secondary"}
-                        className={person.status === "Activo" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-600"}>
-                        {person.status}
+                      <Badge variant={company.status === "Activo" ? "default" : "secondary"}
+                        className={company.status === "Activo" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-600"}>
+                        {company.status}
                       </Badge>
                     </td>
                     <td className="text-right">
-                      {person.status === "Inactivo" && (
+                      {company.status === "Inactivo" && (
                         <SendInvitationDialog
+                          type="empresa"
                           trigger={
                             <Button variant="outline" size="sm" className="text-sm">
                               Enviar invitación
                             </Button>
                           }
+                          recipientData={{
+                            name: company.name,
+                            rut: company.rut
+                          }}
                         />
                       )}
                     </td>

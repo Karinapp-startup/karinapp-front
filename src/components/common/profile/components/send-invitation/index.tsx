@@ -1,97 +1,94 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { useState } from "react";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { Dialog } from "@/components/common/dialog";
-import { FormError } from "@/components/shared/feedback/form-error";
-import { SendInvitationDialogProps } from "@/interfaces/common/profile";
-import { useSendInvitation } from "./hooks";
+import { SendInvitationDialogProps } from "@/interfaces/common/send-invitation";
+import { toast } from "sonner";
+import { CheckCircle } from "lucide-react";
+import { useEmailValidation } from "./hooks";
 
-export const SendInvitationDialog = ({ trigger }: SendInvitationDialogProps) => {
-    const [open, setOpen] = useState(false);
-    const { form, onSubmit } = useSendInvitation();
+export function SendInvitationDialog({
+  trigger,
+  type = 'rle',
+  recipientData
+}: SendInvitationDialogProps) {
+  const [open, setOpen] = useState(false);
+  const { email, setEmail, isValid, error, resetField } = useEmailValidation(type);
 
-    const handleSubmit = async (data) => {
-        const success = await onSubmit(data);
-        if (success) {
-            setOpen(false);
-            form.reset();
-        }
-    };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) return;
+    
+    setOpen(false);
+    resetField();
 
-    const dialogFooter = (
-        <div className="w-full flex items-center">
+    toast.success(
+      <div className="flex items-center gap-2">
+        <CheckCircle className="h-4 w-4 text-green-500" />
+        <span>Correo de invitación enviado correctamente a {email}</span>
+      </div>
+    );
+  };
+
+  return (
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) resetField();
+      }}
+    >
+      <div onClick={() => setOpen(true)}>{trigger}</div>
+      <DialogContent className="p-6 bg-white rounded-xl">
+        <div className="space-y-4">
+          <h2 className="text-lg font-medium">Enviar invitación</h2>
+
+          <p className="text-sm text-gray-600">
+            {type === 'rle'
+              ? 'Al enviar una invitación, el Representante Laboral Electrónico recibirá un correo para que pueda registrarse en la plataforma.'
+              : 'Al enviar una invitación, el empleador recibirá un correo para que pueda registrarse en la plataforma.'}
+          </p>
+
+          <div>
+            <label className="text-sm text-gray-600 block">
+              {type === 'rle' ? 'Correo del RLE' : 'Correo del empleador'}
+            </label>
+            <Input
+              type="email"
+              placeholder="ej. jplopezg@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={error ? "border-red-500" : ""}
+            />
+            {error && (
+              <p className="text-sm text-red-500 mt-1">{error}</p>
+            )}
+          </div>
+
+          <div className="flex justify-between gap-2">
             <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                    setOpen(false);
-                    form.reset();
-                }}
-                className="text-gray-600 h-9"
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setOpen(false);
+                resetField();
+              }}
             >
-                Cancelar
+              Cancelar
             </Button>
-            <span className="flex-1" />
             <Button
-                type="submit"
-                form="invitation-form"
-                className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-                disabled={form.formState.isSubmitting}
+              onClick={handleSubmit}
+              className="bg-[#0066FF] text-white hover:bg-blue-600"
+              disabled={!isValid}
             >
-                Enviar invitación
+              Enviar invitación
             </Button>
+          </div>
         </div>
-    );
-
-    const defaultTrigger = (
-        <Button variant="outline" size="sm">
-            Enviar invitación
-        </Button>
-    );
-
-    return (
-        <Dialog
-            open={open}
-            onOpen={() => setOpen(true)}
-            onClose={() => setOpen(false)}
-            title="Enviar invitación"
-            description="Al enviar una invitación, el Representante Laboral Electrónico recibirá un correo para que pueda registrarse en la plataforma."
-            footer={dialogFooter}
-            trigger={trigger || defaultTrigger}
-        >
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} id="invitation-form">
-                    <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                            <FormItem>
-                                <label className="text-sm text-gray-600 block mb-1.5 text-left pl-0">
-                                    Correo del RLE
-                                </label>
-                                <FormControl>
-                                    <Input
-                                        type="email"
-                                        placeholder="ej. gonzalez@email.com"
-                                        className={cn(
-                                            "w-full h-10 text-sm",
-                                            form.formState.errors.email
-                                                ? "border-red-300 focus:border-red-500 focus:ring-red-200 bg-red-50"
-                                                : "border-gray-200 focus:border-blue-300 focus:ring-blue-200"
-                                        )}
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormError message={form.formState.errors.email?.message} />
-                            </FormItem>
-                        )}
-                    />
-                </form>
-            </Form>
-        </Dialog>
-    );
-}; 
+      </DialogContent>
+    </Dialog>
+  );
+} 
