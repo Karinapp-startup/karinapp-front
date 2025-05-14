@@ -1,14 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { useNewComplaint } from "../complements/hooks/useNewComplaint";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { ProgressBar } from "./ProgressBar";
 import { VictimForm } from "../steps/VictimForm";
@@ -22,7 +16,6 @@ import { ReportedSituationsForm } from "../steps/ReportedSituationsForm";
 import { SafeguardMeasuresForm } from "../steps/SafeguardMeasuresForm";
 import { SummaryForm } from "../steps/SummaryForm";
 import { ReviewForm } from "../steps/ReviewForm";
-import { ComplaintFormState } from "@/interfaces/complaints/form-state";
 import { EmployerFormData } from "@/interfaces/complaints/forms/employer";
 import { VictimFormData, defaultVictimFormData } from "@/interfaces/complaints/forms/victim";
 import { AccusedFormData } from "@/interfaces/complaints/forms/accused";
@@ -34,7 +27,6 @@ import { ReportedSituationsFormData } from "@/interfaces/complaints/forms/report
 import { SafeguardMeasuresFormData } from "@/interfaces/complaints/forms/safeguard";
 import { SummaryFormData } from "@/interfaces/complaints/forms/summary";
 import { ReviewFormData } from "@/interfaces/complaints/forms/review";
-import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
 export function ComplaintForm() {
@@ -315,7 +307,7 @@ export function ComplaintForm() {
 
       <div className="flex-1 p-6 bg-gray-50">
         <div className="w-full max-w-[800px] mx-auto">
-          <div className="rounded-2xl border border-[#EAECF0] bg-[#F9FAFB] p-8">
+          <div className="rounded-2xl border border-[#EAECF0] bg-[#F9FAFB] p-8 bg-gray-100">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
@@ -325,9 +317,10 @@ export function ComplaintForm() {
                   </div>
                 </div>
                 {isLoading && (
-                  <span className="text-sm text-gray-500 whitespace-nowrap">
-                    Guardando...
-                  </span>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Guardando...</span>
+                  </div>
                 )}
               </div>
 

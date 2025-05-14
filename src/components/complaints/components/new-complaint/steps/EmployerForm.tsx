@@ -12,23 +12,24 @@ import { Label } from "@/components/ui/label";
 import { EmployerFormData, defaultEmployerFormData } from "@/interfaces/complaints/forms/employer";
 import { StepProps } from "@/interfaces/complaints/forms";
 import { useState, useEffect } from "react";
+import { employers } from "../complements/data/mockData";
 
 interface Props extends Omit<StepProps, 'onNext'> {
   defaultValues: EmployerFormData;
   onNext: (data: EmployerFormData) => void;
 }
 
-export const EmployerForm = ({ onNext, onBack, defaultValues }: Props) => {
+export const EmployerForm = ({ onNext, defaultValues }: Props) => {
   const [formData, setFormData] = useState<EmployerFormData>({
     ...defaultEmployerFormData,
-    employer: defaultValues?.employer || 'select',
+    employer: '',
     date: defaultValues?.date || new Date()
   });
 
   const [isValid, setIsValid] = useState(false);
 
   useEffect(() => {
-    setIsValid(formData.employer !== 'select');
+    setIsValid(formData.employer !== '');
   }, [formData.employer]);
 
   const handleEmployerChange = (value: string) => {
@@ -40,33 +41,16 @@ export const EmployerForm = ({ onNext, onBack, defaultValues }: Props) => {
     onNext(updatedData);
   };
 
-  const getEmployerLabel = (value: string) => {
-    switch (value) {
-      case '1':
-        return 'Empleador 1';
-      case '2':
-        return 'Empleador 2';
-      case '3':
-        return 'Empleador 3';
-      default:
-        return 'Selecciona un empleador de la lista';
-    }
-  };
-
   const handleDateChange = (date: Date | undefined) => {
-    if (date) {
+    const today = new Date();
+
+    if (date && date <= today) {
       const updatedData = {
         ...formData,
         date
       };
       setFormData(updatedData);
       onNext(updatedData);
-    }
-  };
-
-  const handleNext = () => {
-    if (isValid) {
-      onNext(formData);
     }
   };
 
@@ -82,41 +66,23 @@ export const EmployerForm = ({ onNext, onBack, defaultValues }: Props) => {
               value={formData.employer}
               onValueChange={handleEmployerChange}
             >
-              <SelectTrigger className="w-full h-10 bg-white border-gray-200">
-                <SelectValue>
-                  {getEmployerLabel(formData.employer)}
-                </SelectValue>
+              <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm">
+                <SelectValue placeholder="Selecciona un empleador de la lista" />
               </SelectTrigger>
               <SelectContent
                 className="bg-white w-full"
                 position="popper"
                 sideOffset={4}
               >
-                <SelectItem
-                  value="select"
-                  disabled
-                  className="text-gray-500 bg-white hover:bg-white cursor-default"
-                >
-                  Selecciona un empleador de la lista
-                </SelectItem>
-                <SelectItem
-                  value="1"
-                  className="bg-white hover:bg-gray-50"
-                >
-                  Empleador 1
-                </SelectItem>
-                <SelectItem
-                  value="2"
-                  className="bg-white hover:bg-gray-50"
-                >
-                  Empleador 2
-                </SelectItem>
-                <SelectItem
-                  value="3"
-                  className="bg-white hover:bg-gray-50"
-                >
-                  Empleador 3
-                </SelectItem>
+                {employers.map((employer) => (
+                  <SelectItem
+                    key={employer.id}
+                    value={employer.id}
+                    className="text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {employer.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -131,16 +97,18 @@ export const EmployerForm = ({ onNext, onBack, defaultValues }: Props) => {
               <Button
                 variant="outline"
                 className={cn(
-                  "w-full h-10 justify-start text-left font-normal bg-white border-gray-200",
+                  "w-full h-10 justify-between text-left font-normal bg-white border border-gray-200 text-gray-500 hover:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500",
                   !formData.date && "text-gray-500"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
                 {formData.date ? (
-                  format(formData.date, "PPP", { locale: es })
+                  <span className="text-gray-900">
+                    {format(formData.date, "dd/MM/yyyy", { locale: es })}
+                  </span>
                 ) : (
-                  <span>Selecciona una fecha</span>
+                  <span className="text-gray-500">Selecciona una fecha</span>
                 )}
+                <CalendarIcon className="h-4 w-4 text-gray-400" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-white" align="start">
@@ -151,13 +119,12 @@ export const EmployerForm = ({ onNext, onBack, defaultValues }: Props) => {
                 initialFocus
                 locale={es}
                 className="bg-white rounded-md border-0"
+                disabled={(date) => date > new Date()}
               />
             </PopoverContent>
           </Popover>
         </div>
       </div>
-
-
     </div>
   );
 }; 

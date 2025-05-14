@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileDown, Mail, ChevronLeft } from "lucide-react";
+import { FileDown, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { AdvancedSearch } from "@/components/complaints/components/list-compliance/advancedSearch";
