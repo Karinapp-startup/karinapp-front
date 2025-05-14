@@ -11,7 +11,9 @@ import {
   Shield,
   LogOut,
   Settings,
-  User
+  User,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -39,6 +41,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleProfileClick = async () => {
     setIsLoading(true);
@@ -60,13 +63,32 @@ export const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </div>
       )}
-      <div className={cn("w-64 min-h-screen bg-white border-r flex flex-col", className)}>
-        <div className="p-4 border-b">
+      <div
+        className={cn(
+          "relative min-h-screen bg-white border-r flex flex-col transition-all duration-300",
+          isCollapsed ? "w-20" : "w-64",
+          className
+        )}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute -right-4 top-6 h-8 w-8 rounded-full border bg-white shadow-md"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
+
+        <div className={cn("p-4 border-b", isCollapsed && "flex justify-center")}>
           <div className="flex items-center gap-2">
             <div className={styles.logoContainer}>
               <Shield className={cn("h-6 w-6 text-white", styles.logo)} />
             </div>
-            <span className={styles.appName}>Karin App</span>
+            {!isCollapsed && <span className={styles.appName}>Karin App</span>}
           </div>
         </div>
 
@@ -76,10 +98,13 @@ export const Sidebar = ({ className }: SidebarProps) => {
               <Link key={item.href} href={item.href}>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-2"
+                  className={cn(
+                    "w-full justify-start gap-2",
+                    isCollapsed && "justify-center px-2"
+                  )}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  {!isCollapsed && item.label}
                 </Button>
               </Link>
             ))}
@@ -88,44 +113,50 @@ export const Sidebar = ({ className }: SidebarProps) => {
 
         <div className="px-3 py-4">
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 p-2 w-full rounded-lg hover:bg-gray-100 transition-colors outline-none">
+            <DropdownMenuTrigger className={cn(
+              "flex items-center gap-2 p-2 w-full rounded-lg hover:bg-gray-100 transition-colors outline-none",
+              isCollapsed && "justify-center"
+            )}>
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-medium">
                 JG
               </div>
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-medium text-gray-900">Juan Pablo González</span>
-                <span className="text-xs text-gray-500">jp@example.com</span>
-              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium text-gray-900">Juan Pablo González</span>
+                  <span className="text-xs text-gray-500">jp@example.com</span>
+                </div>
+              )}
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent className="w-56" align="end">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium text-gray-900">Juan Pablo González</p>
-                <p className="text-xs text-gray-500 truncate">jp@example.com</p>
-              </div>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent
+              className={cn(
+                "w-56 bg-white",
+                isCollapsed && "ml-2"
+              )}
+              align={isCollapsed ? "center" : "end"}
+              sideOffset={isCollapsed ? 8 : 0}
+            >
+              {isCollapsed && (
+                <div className="px-2 py-1.5 bg-white">
+                  <p className="text-sm font-medium text-gray-900">Juan Pablo González</p>
+                  <p className="text-xs text-gray-500 truncate">jp@example.com</p>
+                </div>
+              )}
+              <DropdownMenuSeparator className="bg-gray-100" />
 
               <DropdownMenuItem
-                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-gray-50"
+                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-gray-50 bg-white"
                 onClick={handleProfileClick}
               >
                 <User size={16} className="text-gray-500" />
                 <span className="text-sm text-gray-700">Mi Perfil</span>
               </DropdownMenuItem>
 
-              <Link href="/settings">
-                <DropdownMenuItem className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-gray-50">
-                  <Settings size={16} className="text-gray-500" />
-                  <span className="text-sm text-gray-700">Configuración</span>
-                </DropdownMenuItem>
-              </Link>
-
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-100" />
 
               <DropdownMenuItem
-                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-red-50 text-red-600 hover:text-red-700"
+                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-red-50 text-red-600 hover:text-red-700 bg-white"
                 onClick={() => {
-                  // Aquí va la lógica de cerrar sesión
                   console.log("Cerrar sesión");
                 }}
               >
