@@ -255,7 +255,7 @@ export function ComplaintForm() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push('/denuncia')}
+              onClick={() => router.push('/')}
               className="text-gray-600"
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -296,7 +296,7 @@ export function ComplaintForm() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/denuncia')}
+            onClick={() => router.push('/')}
             className="text-gray-600"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
