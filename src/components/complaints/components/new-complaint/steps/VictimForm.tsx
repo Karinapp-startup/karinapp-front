@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatRut } from "@/validators/rut";
+import { victimFormSchema } from "@/validators/victimFormSchema";
 import { cn } from "@/lib/utils";
 import {
   VictimFormData,
@@ -43,14 +44,15 @@ export function VictimForm({ defaultValues = defaultVictimFormData, onNext, onBa
   const {
     control,
     handleSubmit,
-    formState: { errors, touchedFields },
+    formState: { errors },
     watch,
     setValue,
     trigger,
     getValues
   } = useForm<VictimFormData>({
     defaultValues,
-    mode: "onTouched"
+    mode: "onTouched",
+    resolver: zodResolver(victimFormSchema)
   });
 
   const isVictim = watch("isVictim");

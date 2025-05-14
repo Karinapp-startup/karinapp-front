@@ -307,7 +307,7 @@ export function ComplaintForm() {
 
       <div className="flex-1 p-6 bg-gray-50">
         <div className="w-full max-w-[800px] mx-auto">
-          <div className="rounded-2xl border border-[#EAECF0] bg-[#F9FAFB] p-8 bg-gray-100">
+          <div className="rounded-2xl border border-[#EAECF0] p-8 bg-gray-100">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
@@ -326,7 +326,18 @@ export function ComplaintForm() {
 
               {renderStep()}
 
-              <div className="flex justify-end">
+              <div className="flex justify-between">
+                {currentStep > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={previousStep}
+                    className="text-gray-700 border border-gray-300 flex items-center gap-2"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Atrás
+                  </Button>
+                )}
+
                 <Button
                   onClick={handleNextStep}
                   disabled={!isStepValid()}
