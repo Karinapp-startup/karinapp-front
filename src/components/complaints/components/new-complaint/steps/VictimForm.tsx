@@ -6,14 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatRut } from "@/validators/rut";
-import { victimFormSchema } from "@/validators/victimFormSchema";
+import { victimFormSchema } from "@/validators/schemas/victimFormSchema";
 import { cn } from "@/lib/utils";
 import {
   VictimFormData,
   PersonData,
   defaultVictimFormData
 } from "@/interfaces/complaints/forms/victim";
-import { StepProps } from "@/interfaces/complaints/forms";
 
 interface ValidationErrors {
   victimSection: {
