@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation";
 import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
 import { SafeguardMeasureType } from "@/interfaces/complaints/forms/safeguard";
 import { useAccusedFormValidation } from "../complements/hooks/useAccusedFormValidation";
+import { useWitnessFormValidation } from "../complements/hooks/useWitnessFormValidation";
 
 export function ComplaintForm() {
   const {
@@ -112,6 +113,7 @@ export function ComplaintForm() {
 
   const validation = useVictimFormValidation();
   const accusedValidation = useAccusedFormValidation();
+  const witnessValidation = useWitnessFormValidation();
 
 
   const isStepValid = () => {
@@ -133,7 +135,7 @@ export function ComplaintForm() {
           complaintFormData.relationship?.relationship?.description?.trim()
         );
       case 5: // Witness Form (antes era 6)
-        return !!(complaintFormData.witness?.witnesses?.length);
+        return !!(complaintFormData.witness?.witnesses?.length) && witnessValidation.isValid;
       case 6: // Reported Facts Form (antes era 7)
         return !!(
           complaintFormData.reportedFacts?.description &&
@@ -175,8 +177,6 @@ export function ComplaintForm() {
       nextStep();
     }
   };
-
-
 
   const renderStep = () => {
     switch (step) {
@@ -220,6 +220,7 @@ export function ComplaintForm() {
             defaultValues={complaintFormData.witness}
             onNext={handleWitnessNext}
             onBack={previousStep}
+            validation={witnessValidation}
           />
         );
       case 6:
