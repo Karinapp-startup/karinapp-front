@@ -201,25 +201,23 @@ export const useVictimFormValidation = (initialData: InitialData = {}) => {
     let error = '';
 
     // Solo validar si el campo ha sido tocado
-    if (touched[section][field]) {
-      switch (field) {
-        case 'firstName':
-        case 'lastName':
-          error = validateName(value);
-          break;
-        case 'rut':
-          error = validateRut(value);
-          break;
-        case 'email':
-          error = validateEmail(value);
-          break;
-        case 'position':
-          error = validatePosition(value);
-          break;
-        case 'department':
-          error = validateDepartment(value);
-          break;
-      }
+    switch (field) {
+      case 'firstName':
+      case 'lastName':
+        error = validateName(value);
+        break;
+      case 'rut':
+        error = validateRut(value);
+        break;
+      case 'email':
+        error = validateEmail(value);
+        break;
+      case 'position':
+        error = validatePosition(value);
+        break;
+      case 'department':
+        error = validateDepartment(value);
+        break;
     }
 
     setErrors(prev => ({
@@ -423,11 +421,20 @@ export const useVictimFormValidation = (initialData: InitialData = {}) => {
 
   // No validar al iniciar, solo cuando cambian los datos
   useEffect(() => {
-    if (Object.values(touched.victim).some(t => t) ||
-      Object.values(touched.complainant).some(t => t)) {
-      validateForm();
+    const victimFieldsFilled = Object.values(formData.victim).every(value => value.trim() !== '');
+    const hasVictimErrors = Object.values(errors.victim).some(error => error !== '');
+
+    let isFormValid = victimFieldsFilled && !hasVictimErrors;
+
+    if (!formData.isVictim && formData.complainant) {
+      const complainantFieldsFilled = Object.values(formData.complainant).every(value => value.trim() !== '');
+      const hasComplainantErrors = Object.values(errors.complainant).some(error => error !== '');
+
+      isFormValid = isFormValid && complainantFieldsFilled && !hasComplainantErrors;
     }
-  }, [formData]);
+
+    setIsValid(isFormValid);
+  }, [formData, errors]);
 
   return {
     formData,

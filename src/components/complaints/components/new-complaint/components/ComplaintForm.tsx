@@ -9,7 +9,6 @@ import { VictimForm } from "../steps/VictimForm";
 import { EmployerForm } from "../steps/EmployerForm";
 import { AccusedForm } from "../steps/AccusedForm";
 import { RelationshipForm } from "../steps/RelationshipForm";
-
 import { WitnessForm } from "../steps/WitnessForm";
 import { ReportedFactsForm } from "../steps/ReportedFactsForm";
 import { ReportedSituationsForm } from "../steps/ReportedSituationsForm";
@@ -20,7 +19,6 @@ import { EmployerFormData } from "@/interfaces/complaints/forms/employer";
 import { VictimFormData, defaultVictimFormData } from "@/interfaces/complaints/forms/victim";
 import { AccusedFormData } from "@/interfaces/complaints/forms/accused";
 import { RelationshipFormData } from "@/interfaces/complaints/forms/relationship";
-import { SituationsFormData } from "@/interfaces/complaints/forms/situations";
 import { WitnessFormData } from "@/interfaces/complaints/forms/witness";
 import { ReportedFactsFormData } from "@/interfaces/complaints/forms/reported-facts";
 import { ReportedSituationsFormData } from "@/interfaces/complaints/forms/reported-situations";
@@ -28,7 +26,6 @@ import { SafeguardMeasuresFormData } from "@/interfaces/complaints/forms/safegua
 import { SummaryFormData } from "@/interfaces/complaints/forms/summary";
 import { ReviewFormData } from "@/interfaces/complaints/forms/review";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
 import { SafeguardMeasureType } from "@/interfaces/complaints/forms/safeguard";
 
@@ -42,12 +39,12 @@ export function ComplaintForm() {
     previousStep
   } = useNewComplaint();
 
-  const {
+  /* const {
     formData: victimFormData,
     errors,
     isValid,
     validateForm,
-  } = useVictimFormValidation();
+  } = useVictimFormValidation(); */
 
   const TOTAL_STEPS = 9;
   const router = useRouter();
@@ -120,6 +117,8 @@ export function ComplaintForm() {
     console.log('Editando sección:', path);
   };
 
+
+
   const isStepValid = () => {
     switch (step) {
       case 1: // Employer Form
@@ -130,7 +129,7 @@ export function ComplaintForm() {
           !isNaN(complaintFormData.employer.date.getTime())
         );
       case 2: // Victim Form
-        return true;
+        return validation.isValid;
       case 3: // Accused Form
         return !!(complaintFormData.accused?.accusedList?.length);
       case 4: // Relationship Form (incluye situations)
@@ -173,11 +172,6 @@ export function ComplaintForm() {
   };
 
   const canAdvanceToNextStep = () => {
-    if (step === 2) { // Paso de la víctima
-      // Siempre permitir avanzar en el paso de la víctima
-      return true;
-    }
-
     return isStepValid();
   };
 
@@ -186,6 +180,8 @@ export function ComplaintForm() {
       nextStep();
     }
   };
+
+  const validation = useVictimFormValidation();
 
   const renderStep = () => {
     switch (step) {
@@ -203,6 +199,7 @@ export function ComplaintForm() {
             defaultValues={complaintFormData.victim || defaultVictimFormData}
             onNext={handleVictimUpdate}
             onBack={previousStep}
+            validation={validation}
           />
         );
       case 3:

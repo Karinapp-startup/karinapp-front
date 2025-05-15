@@ -11,9 +11,10 @@ interface Props {
   defaultValues?: VictimFormData;
   onNext: (data: VictimFormData) => void;
   onBack: () => void;
+  validation: ReturnType<typeof useVictimFormValidation>;
 }
 
-export function VictimForm({ defaultValues, onNext, onBack }: Props) {
+export function VictimForm({ defaultValues, onNext, onBack, validation }: Props) {
   const {
     formData,
     errors,
@@ -22,11 +23,7 @@ export function VictimForm({ defaultValues, onNext, onBack }: Props) {
     handleBlur,
     setFormData,
     handleIsVictimChange
-  } = useVictimFormValidation({
-    victim: defaultValues?.victim,
-    complainant: defaultValues?.complainant,
-    isVictim: defaultValues?.isVictim
-  });
+  } = validation
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
