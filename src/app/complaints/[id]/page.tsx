@@ -48,11 +48,30 @@ import {
 import {
   SummaryFormData
 } from "@/interfaces/complaints/forms/summary";
+import { useVictimFormValidation } from "@/components/complaints/components/new-complaint/complements/hooks/useVictimFormValidation";
 
 // Extender el tipo ComplaintType para incluir los campos de edición
 interface EditableComplaintType extends ComplaintType {
   employer?: EmployerFormData;
-  victim?: VictimFormData;
+  victim?: {
+    victim: {
+      firstName: string;
+      lastName: string;
+      rut: string;
+      email: string;
+      position: string;
+      department: string;
+    };
+    complainant?: {
+      firstName: string;
+      lastName: string;
+      rut: string;
+      email: string;
+      position: string;
+      department: string;
+    };
+    isVictim: boolean;
+  };
   accused?: AccusedFormData;
   relationship?: RelationshipFormData;
   situations?: SituationsFormData;
@@ -87,7 +106,8 @@ const defaultFormValues = {
       position: "",
       department: "",
     },
-    isVictim: false,
+    complainant: undefined,
+    isVictim: true
   },
   accused: {
     accused: {
@@ -237,7 +257,20 @@ export default function EditComplaintStep() {
       case '1':
         return <EmployerForm defaultValues={complaintData.employer ?? defaultFormValues.employer} {...commonProps} />;
       case '2':
-        return <VictimForm defaultValues={complaintData.victim ?? defaultFormValues.victim} {...commonProps} />;
+        const victimData = complaintData.victim ?? defaultFormValues.victim;
+        const victimValidation = useVictimFormValidation({
+          victim: victimData.victim,
+          complainant: victimData.complainant,
+          isVictim: victimData.isVictim
+        });
+
+        return (
+          <VictimForm
+            defaultValues={victimData}
+            {...commonProps}
+            validation={victimValidation}
+          />
+        );
       case '3':
         return <AccusedForm defaultValues={complaintData.accused ?? defaultFormValues.accused} {...commonProps} />;
       case '4':
