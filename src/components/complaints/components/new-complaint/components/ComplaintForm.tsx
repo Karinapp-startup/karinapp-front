@@ -28,6 +28,7 @@ import { ReviewFormData } from "@/interfaces/complaints/forms/review";
 import { useRouter } from "next/navigation";
 import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
 import { SafeguardMeasureType } from "@/interfaces/complaints/forms/safeguard";
+import { useAccusedFormValidation } from "../complements/hooks/useAccusedFormValidation";
 
 export function ComplaintForm() {
   const {
@@ -39,13 +40,6 @@ export function ComplaintForm() {
     previousStep
   } = useNewComplaint();
 
-  /* const {
-    formData: victimFormData,
-    errors,
-    isValid,
-    validateForm,
-  } = useVictimFormValidation(); */
-
   const TOTAL_STEPS = 9;
   const router = useRouter();
 
@@ -54,7 +48,6 @@ export function ComplaintForm() {
   };
 
   const handleVictimUpdate = (data: VictimFormData) => {
-    // Simplemente actualizar y avanzar sin validación
     updateFormData({ victim: data });
     nextStep();
   };
@@ -117,6 +110,8 @@ export function ComplaintForm() {
     console.log('Editando sección:', path);
   };
 
+  const validation = useVictimFormValidation();
+  const accusedValidation = useAccusedFormValidation();
 
 
   const isStepValid = () => {
@@ -131,7 +126,7 @@ export function ComplaintForm() {
       case 2: // Victim Form
         return validation.isValid;
       case 3: // Accused Form
-        return !!(complaintFormData.accused?.accusedList?.length);
+        return !!(complaintFormData.accused?.accusedList?.length) && accusedValidation.isValid;
       case 4: // Relationship Form (incluye situations)
         return !!(
           complaintFormData.relationship?.relationship?.type &&
@@ -181,7 +176,7 @@ export function ComplaintForm() {
     }
   };
 
-  const validation = useVictimFormValidation();
+
 
   const renderStep = () => {
     switch (step) {
@@ -208,6 +203,7 @@ export function ComplaintForm() {
             defaultValues={complaintFormData.accused}
             onNext={handleAccusedNext}
             onBack={previousStep}
+            validation={accusedValidation}
           />
         );
       case 4:
@@ -390,4 +386,4 @@ export function ComplaintForm() {
       </div>
     </div>
   );
-} 
+}

@@ -14,7 +14,7 @@ interface Props {
   validation: ReturnType<typeof useVictimFormValidation>;
 }
 
-export function VictimForm({ defaultValues, onNext, onBack, validation }: Props) {
+export function VictimForm({ onNext, validation }: Props) {
   const {
     formData,
     errors,

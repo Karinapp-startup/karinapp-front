@@ -6,56 +6,42 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { AccusedFormData, AccusedPerson, defaultAccusedFormData } from "@/interfaces/complaints/forms/accused";
 import { StepProps } from "@/interfaces/complaints/forms";
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { accusedFormSchema } from "@/validators/schemas/accusedFormSchema";
 import { useForm, Controller } from "react-hook-form";
 import { cn } from "@/lib/utils";
+import { AccusedData, useAccusedFormValidation } from "../complements/hooks/useAccusedFormValidation";
 
 const MAX_ACCUSED = 10;
-
-type FormSchema = z.infer<typeof accusedFormSchema>;
 
 interface Props extends Omit<StepProps, 'onNext'> {
   defaultValues: AccusedFormData;
   onNext: (data: AccusedFormData) => void;
+  validation: ReturnType<typeof useAccusedFormValidation>;
 }
 
-export const AccusedForm = ({ defaultValues, onNext }: Props) => {
+export const AccusedForm = ({ defaultValues, onNext, validation }: Props) => {
+  const {
+    formData,
+    errors,
+    touched,
+    isValid,
+    handleChange,
+    handleBlur,
+    resetForm,
+  } = validation;
+
   const accusedList = defaultValues.accusedList || [];
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<FormSchema>({
-    defaultValues: {
-      accused: {
-        firstName: "",
-        lastName: "",
-        rut: "",
-        email: "",
-        position: "",
-        department: "",
-      },
-    },
-    resolver: zodResolver(accusedFormSchema),
-    mode: "onTouched",
-  });
-
-  const onSubmit = (data: FormSchema) => {
-    if (accusedList.length >= MAX_ACCUSED) {
-      return; // No permitir más de 10 denunciados
-    }
+  const handleAdd = () => {
+    if (!isValid || accusedList.length >= MAX_ACCUSED) return;
 
     const newAccused: AccusedPerson = {
-      fullName: `${data.accused.firstName} ${data.accused.lastName}`,
-      rut: data.accused.rut,
-      email: data.accused.email,
-      position: data.accused.position,
-      department: data.accused.department,
+      fullName: `${formData.accused.firstName} ${formData.accused.lastName}`,
+      rut: formData.accused.rut,
+      email: formData.accused.email,
+      position: formData.accused.position,
+      department: formData.accused.department,
     };
 
     const updatedList = [...accusedList, newAccused];
@@ -63,7 +49,8 @@ export const AccusedForm = ({ defaultValues, onNext }: Props) => {
       ...defaultValues,
       accusedList: updatedList,
     });
-    reset();
+
+    resetForm();
   };
 
   const handleRemoveAccused = (index: number) => {
@@ -74,31 +61,31 @@ export const AccusedForm = ({ defaultValues, onNext }: Props) => {
     });
   };
 
-  const renderField = (name: string, label: string, placeholder: string, type: string = "text") => (
+  const renderField = (
+    name: keyof AccusedData,
+    label: string,
+    placeholder: string,
+    type = "text"
+  ) => (
     <div className="space-y-2">
-      <Controller
-        name={`accused.${name}`}
-        control={control}
-        render={({ field }) => (
-          <>
-            <Input
-              {...field}
-              type={type}
-              placeholder={placeholder}
-              className={cn(
-                "bg-white border-gray-200",
-                errors.accused?.[name as keyof typeof errors.accused] && "border-red-500"
-              )}
-            />
-            <Label className="text-sm text-gray-600">{label}</Label>
-            {errors.accused?.[name as keyof typeof errors.accused] && (
-              <p className="text-sm text-red-500">
-                {errors.accused[name as keyof typeof errors.accused]?.message}
-              </p>
-            )}
-          </>
+      <Label className="text-sm text-gray-600">
+        {label}
+        <span className="text-red-500 ml-1">*</span>
+      </Label>
+      <Input
+        type={type}
+        value={formData.accused[name] || ""}
+        onChange={(e) => handleChange(name, e.target.value)}
+        onBlur={() => handleBlur(name)}
+        placeholder={placeholder}
+        className={cn(
+          "w-full bg-white border-gray-200",
+          touched.accused[name] && errors.accused[name] && "border-red-500"
         )}
       />
+      {touched.accused[name] && errors.accused[name] && (
+        <p className="text-sm text-red-500">{errors.accused[name]}</p>
+      )}
     </div>
   );
 
@@ -108,10 +95,17 @@ export const AccusedForm = ({ defaultValues, onNext }: Props) => {
 
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Ingresa los datos de cada uno: <span className="text-gray-400">(máximo 10 denunciados)</span>
+          Ingresa los datos de cada uno:{" "}
+          <span className="text-gray-400">(máximo 10 denunciados)</span>
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleAdd();
+          }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
           {renderField("firstName", "Nombres", "ej: Juan Pablo")}
           {renderField("lastName", "Apellidos", "ej: López González")}
           {renderField("rut", "RUT", "ej: 18.456.987-0")}
@@ -120,11 +114,11 @@ export const AccusedForm = ({ defaultValues, onNext }: Props) => {
           {renderField("department", "Departamento/Área", "ej: Depto informática")}
 
           <div className="md:col-span-2 flex justify-end">
-            <Button 
-              type="submit" 
-              variant="outline" 
+            <Button
+              type="submit"
+              variant="outline"
               className="bg-white hover:bg-gray-50 border-gray-200"
-              disabled={accusedList.length >= MAX_ACCUSED}
+              disabled={!isValid || accusedList.length >= MAX_ACCUSED}
             >
               Añadir
             </Button>
