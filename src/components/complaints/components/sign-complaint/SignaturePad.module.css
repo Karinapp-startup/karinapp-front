@@ -1,0 +1,22 @@
+.signaturePadContainer {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background-color: white;
+}
+
+.signaturePad {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0.5rem;
+}
+
+.signaturePad canvas {
+  width: 100% !important;
+  height: 100% !important;
+} 

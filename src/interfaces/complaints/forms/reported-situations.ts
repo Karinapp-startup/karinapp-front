@@ -1,18 +1,15 @@
-export type SituationType = 
-  | "workplace_harassment"
-  | "sexual_harassment"
-  | "workplace_violence";
+export type SituationType = 'workplace_harassment' | 'sexual_harassment' | 'workplace_violence' | 'select';
 
 export interface ReportedSituationsFormData {
-  situationType: 'workplace_harassment' | 'sexual_harassment' | 'workplace_violence';
+  situationType: SituationType;
   description: string;
-  frequency: 'once' | 'multiple' | 'continuous';
+  frequency: string;
   affectedEmployees: string[];
-  impactLevel: 'low' | 'medium' | 'high';
+  impactLevel: string;
   previousReports: boolean;
   evidence: boolean;
   priorCases: boolean;
-  previousReportDetails?: string;
+  isValid?: boolean;
 }
 
 // Valores por defecto

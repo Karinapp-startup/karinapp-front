@@ -1,25 +1,19 @@
-export interface WitnessPerson {
+export interface Witness {
   fullName: string;
   position: string;
   department: string;
 }
 
 export interface WitnessFormData {
-  witnesses: WitnessPerson[];
-  currentWitness: WitnessPerson;
+  witnesses: Witness[];
 }
 
 export const defaultWitnessFormData: WitnessFormData = {
-  witnesses: [],
-  currentWitness: {
-    fullName: '',
-    position: '',
-    department: ''
-  }
+  witnesses: []
 };
 
 export interface WitnessField {
-  id: keyof WitnessPerson;
+  id: keyof Witness;
   label: string;
   placeholder: string;
 }

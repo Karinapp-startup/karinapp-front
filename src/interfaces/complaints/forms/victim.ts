@@ -11,8 +11,9 @@ export type ComplainantData = Partial<PersonData>;
 
 export interface VictimFormData {
   victim: PersonData;
+  complainant?: PersonData;
   isVictim: boolean;
-  complainant?: ComplainantData;
+  isValid?: boolean;
 }
 
 export const defaultVictimFormData: VictimFormData = {

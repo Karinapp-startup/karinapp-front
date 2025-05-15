@@ -1,37 +1,11 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatRut } from "@/validators/rut";
-import { victimFormSchema } from "@/validators/schemas/victimFormSchema";
+import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
 import { cn } from "@/lib/utils";
-import {
-  VictimFormData,
-  PersonData,
-  defaultVictimFormData
-} from "@/interfaces/complaints/forms/victim";
-
-interface ValidationErrors {
-  victimSection: {
-    firstName?: string;
-    lastName?: string;
-    rut?: string;
-    email?: string;
-    position?: string;
-    department?: string;
-  };
-  complainantSection?: {
-    firstName?: string;
-    lastName?: string;
-    rut?: string;
-    email?: string;
-    position?: string;
-    department?: string;
-  };
-}
+import { VictimFormData } from "@/interfaces/complaints/forms/victim";
 
 interface Props {
   defaultValues?: VictimFormData;
@@ -39,98 +13,62 @@ interface Props {
   onBack: () => void;
 }
 
-export function VictimForm({ defaultValues = defaultVictimFormData, onNext, onBack }: Props) {
+export function VictimForm({ defaultValues, onNext, onBack }: Props) {
   const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    watch,
-    setValue,
-    trigger,
-    getValues
-  } = useForm<VictimFormData>({
-    defaultValues,
-    mode: "onTouched",
-    resolver: zodResolver(victimFormSchema)
+    formData,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    setFormData,
+    handleIsVictimChange
+  } = useVictimFormValidation({
+    victim: defaultValues?.victim,
+    complainant: defaultValues?.complainant,
+    isVictim: defaultValues?.isVictim
   });
 
-  const isVictim = watch("isVictim");
-
-  const onSubmit = (data: VictimFormData) => {
-    onNext(data);
-  };
-
-  const handleIsVictimChange = (checked: boolean) => {
-    setValue("isVictim", checked);
-    if (checked) {
-      setValue("complainant", undefined);
-    } else {
-      setValue("complainant", {
-        firstName: '',
-        lastName: '',
-        rut: '',
-        email: '',
-        position: '',
-        department: ''
-      });
-    }
-    const currentData = getValues();
-    onNext(currentData);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onNext({
+      victim: formData.victim,
+      complainant: formData.complainant,
+      isVictim: formData.isVictim
+    });
   };
 
   const renderField = (
     section: "victim" | "complainant",
-    field: keyof PersonData,
+    field: keyof typeof formData.victim,
     label: string,
     placeholder: string,
-    type: string = "text"
-  ) => {
-    const fieldPath = `${section}.${field}` as const;
-    const error = errors[section]?.[field];
-
-    return (
-      <div className="space-y-2">
-        <Label className="text-sm text-gray-600">
-          {label}<span className="text-red-500 ml-1">*</span>
-        </Label>
-        <Controller
-          name={fieldPath}
-          control={control}
-          render={({ field: { onChange, value, onBlur } }) => (
-            <Input
-              type={type}
-              placeholder={placeholder}
-              value={value || ''}
-              onChange={(e) => {
-                let newValue = e.target.value;
-                if (field === 'rut') {
-                  newValue = formatRut(newValue);
-                }
-                onChange(newValue);
-                trigger(fieldPath);
-                const currentData = getValues();
-                onNext(currentData);
-              }}
-              onBlur={() => {
-                onBlur();
-                trigger(fieldPath);
-              }}
-              className={cn(
-                "w-full h-10 bg-white border-gray-200 focus:ring-blue-500",
-                error && "border-red-500 focus:ring-red-500"
-              )}
-            />
-          )}
-        />
-        {error?.message && (
-          <p className="text-sm text-red-500">{error.message}</p>
+    type = "text"
+  ) => (
+    <div className="space-y-2">
+      <Label className="text-sm text-gray-600">
+        {label}<span className="text-red-500 ml-1">*</span>
+      </Label>
+      <Input
+        type={type}
+        value={formData[section]?.[field] || ''}
+        onChange={(e) => handleChange(section, field, e.target.value)}
+        onBlur={() => handleBlur(section, field)}
+        placeholder={placeholder}
+        className={cn(
+          "w-full h-10 bg-white border-gray-200 focus:ring-blue-500",
+          (touched[section][field] || errors[section][field]) &&
+          errors[section][field] && "border-red-500 focus:ring-red-500"
         )}
-      </div>
-    );
-  };
+      />
+      {(touched[section][field] || errors[section][field]) &&
+        errors[section][field] && (
+          <p className="text-sm text-red-500">{errors[section][field]}</p>
+        )}
+    </div>
+  );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-900">Datos de la víctima</h2>
 
       <div className="space-y-4">
@@ -150,16 +88,10 @@ export function VictimForm({ defaultValues = defaultVictimFormData, onNext, onBa
 
       <div className="space-y-4 pt-4">
         <div className="flex items-start space-x-3">
-          <Controller
-            name="isVictim"
-            control={control}
-            render={({ field: { value } }) => (
-              <Checkbox
-                checked={value}
-                onCheckedChange={handleIsVictimChange}
-                className="mt-1 border-gray-300"
-              />
-            )}
+          <Checkbox
+            checked={formData.isVictim}
+            onCheckedChange={handleIsVictimChange}
+            className="mt-1 border-gray-300"
           />
           <div className="space-y-1">
             <Label className="text-sm text-gray-700">
@@ -171,7 +103,7 @@ export function VictimForm({ defaultValues = defaultVictimFormData, onNext, onBa
           </div>
         </div>
 
-        {!isVictim && (
+        {!formData.isVictim && (
           <div className="pt-4">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-6">

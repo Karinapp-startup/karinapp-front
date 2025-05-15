@@ -1,23 +1,20 @@
 export interface ReportedFactsFormData {
-  description: string;
-  date: Date;
+  date: Date | undefined;
   location: string;
-  witnesses: string[];
-  hasEvidence: boolean;
-  evidenceDescription?: string;
-  victimInterview: string;
-  reportedFacts: string;
-  impactLevel: 'low' | 'medium' | 'high';
+  commune: string;
+  street: string;
+  number: string;
+  addressReference: string;
+  description: string;
 }
 
 // Valores por defecto
 export const defaultReportedFactsFormData: ReportedFactsFormData = {
-  description: '',
-  date: new Date(),
-  location: '',
-  witnesses: [],
-  hasEvidence: false,
-  victimInterview: '',
-  reportedFacts: '',
-  impactLevel: 'medium'
+  date: undefined,
+  location: "",
+  commune: "",
+  street: "",
+  number: "",
+  addressReference: "",
+  description: ""
 }; 

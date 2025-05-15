@@ -11,4 +11,4 @@ export const employers = [
   { id: 'emp2', name: 'Constructora Nacional' },
   { id: 'emp3', name: 'Industrias Metalúrgicas SA' },
   { id: 'emp4', name: 'Transportes Unidos' }
-]; 
+];

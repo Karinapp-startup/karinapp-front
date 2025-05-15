@@ -106,6 +106,11 @@ const defaultFormValues = {
       type: RelationshipType.DIRECT,
       hierarchyLevel: HierarchyLevel.SUPERIOR,
       description: "",
+      situations: {
+        hasEvidence: false,
+        hasPriorCases: false,
+        wasPreviouslyReported: false
+      }
     },
     startDate: new Date(),
     isCurrentEmployee: true,
@@ -138,6 +143,10 @@ const defaultFormValues = {
     victimInterview: "",
     reportedFacts: "",
     impactLevel: "low" as const,
+    commune: "",
+    street: "",
+    number: "",
+    addressReference: ""
   },
   reportedSituations: {
     situationType: "workplace_harassment" as const,
@@ -150,12 +159,13 @@ const defaultFormValues = {
     priorCases: false,
   },
   safeguardMeasures: {
-    safeguardMeasure: "workspace_separation" as SafeguardMeasureType,
+    safeguardMeasure: SafeguardMeasureType.SEPARATION,
     safeguardResponsible: "",
     safeguardDate: new Date(),
     otherMeasure: "",
     justification: "",
     urgencyLevel: "low" as const,
+    measures: []
   },
   summary: {
     summary: "",

@@ -1,26 +1,42 @@
-export type SafeguardMeasureType = 
-  | "workspace_separation"
-  | "schedule_modification"
-  | "psychological_care"
-  | "other";
+export const SafeguardMeasureType = {
+  SEPARATION: "workspace_separation",
+  TRANSFER: "transfer",
+  SCHEDULE_MODIFICATION: "schedule_modification",
+  PSYCHOLOGICAL_SUPPORT: "psychological_support",
+  OTHER: "other"
+} as const;
+
+export type SafeguardMeasureTypeValues = typeof SafeguardMeasureType[keyof typeof SafeguardMeasureType];
+
+export interface SafeguardMeasure {
+  type: SafeguardMeasureTypeValues;
+  description: string;
+  responsible: string;
+  date: Date;
+}
 
 export interface SafeguardMeasuresFormData {
-  safeguardMeasure: SafeguardMeasureType;
-  otherMeasure?: string;
+  measures: SafeguardMeasure[];
+  safeguardMeasure: SafeguardMeasureTypeValues;
   safeguardResponsible: string;
   safeguardDate: Date;
-  justification?: string;
-  urgencyLevel?: 'low' | 'medium' | 'high';
+  otherMeasure: string;
+  justification: string;
+  urgencyLevel: "low" | "medium" | "high";
 }
 
 export const defaultSafeguardMeasuresFormData: SafeguardMeasuresFormData = {
-  safeguardMeasure: "workspace_separation",
+  measures: [],
+  safeguardMeasure: SafeguardMeasureType.SEPARATION,
   safeguardResponsible: "",
-  safeguardDate: new Date()
+  safeguardDate: new Date(),
+  otherMeasure: "",
+  justification: "",
+  urgencyLevel: "low"
 };
 
 export interface SafeguardMeasureOption {
-  value: SafeguardMeasureType;
+  value: SafeguardMeasureTypeValues;
   label: string;
 }
 

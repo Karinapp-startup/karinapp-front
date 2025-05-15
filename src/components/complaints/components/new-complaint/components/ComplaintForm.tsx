@@ -9,7 +9,7 @@ import { VictimForm } from "../steps/VictimForm";
 import { EmployerForm } from "../steps/EmployerForm";
 import { AccusedForm } from "../steps/AccusedForm";
 import { RelationshipForm } from "../steps/RelationshipForm";
-import { SituationsForm } from "../steps/SituationsForm";
+
 import { WitnessForm } from "../steps/WitnessForm";
 import { ReportedFactsForm } from "../steps/ReportedFactsForm";
 import { ReportedSituationsForm } from "../steps/ReportedSituationsForm";
@@ -28,18 +28,28 @@ import { SafeguardMeasuresFormData } from "@/interfaces/complaints/forms/safegua
 import { SummaryFormData } from "@/interfaces/complaints/forms/summary";
 import { ReviewFormData } from "@/interfaces/complaints/forms/review";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
+import { SafeguardMeasureType } from "@/interfaces/complaints/forms/safeguard";
 
 export function ComplaintForm() {
   const {
-    formData,
-    currentStep,
+    formData: complaintFormData,
+    currentStep: step,
     isLoading,
     updateFormData,
     nextStep,
     previousStep
   } = useNewComplaint();
 
-  const TOTAL_STEPS = 10;
+  const {
+    formData: victimFormData,
+    errors,
+    isValid,
+    validateForm,
+  } = useVictimFormValidation();
+
+  const TOTAL_STEPS = 9;
   const router = useRouter();
 
   const handleEmployerUpdate = (data: EmployerFormData) => {
@@ -47,7 +57,9 @@ export function ComplaintForm() {
   };
 
   const handleVictimUpdate = (data: VictimFormData) => {
+    // Simplemente actualizar y avanzar sin validación
     updateFormData({ victim: data });
+    nextStep();
   };
 
   const handleAccusedNext = (data: AccusedFormData) => {
@@ -56,22 +68,15 @@ export function ComplaintForm() {
   };
 
   const handleRelationshipNext = (data: RelationshipFormData) => {
-    updateFormData({ relationship: data });
-    nextStep();
-  };
-
-  const handleSituationsNext = (data: SituationsFormData) => {
-    const reportedData: ReportedSituationsFormData = {
-      situationType: "workplace_harassment",
-      description: "Situación reportada",
-      frequency: 'once',
-      affectedEmployees: [],
-      impactLevel: 'low',
-      previousReports: data.situations.wasPreviouslyReported,
-      evidence: data.situations.hasEvidence,
-      priorCases: data.situations.hasPriorCases
-    };
-    updateFormData({ reportedSituations: reportedData });
+    updateFormData({
+      relationship: data,
+      reportedSituations: {
+        ...complaintFormData.reportedSituations,
+        evidence: data.relationship.situations.hasEvidence,
+        priorCases: data.relationship.situations.hasPriorCases,
+        previousReports: data.relationship.situations.wasPreviouslyReported
+      }
+    });
     nextStep();
   };
 
@@ -116,32 +121,78 @@ export function ComplaintForm() {
   };
 
   const isStepValid = () => {
-    switch (currentStep) {
+    switch (step) {
       case 1: // Employer Form
         return !!(
-          formData.employer?.employer &&
-          formData.employer.employer !== 'select' &&
-          formData.employer?.date instanceof Date &&
-          !isNaN(formData.employer.date.getTime())
+          complaintFormData.employer?.employer &&
+          complaintFormData.employer.employer !== 'select' &&
+          complaintFormData.employer?.date instanceof Date &&
+          !isNaN(complaintFormData.employer.date.getTime())
         );
-      // ... otros casos
+      case 2: // Victim Form
+        return true;
+      case 3: // Accused Form
+        return !!(complaintFormData.accused?.accusedList?.length);
+      case 4: // Relationship Form (incluye situations)
+        return !!(
+          complaintFormData.relationship?.relationship?.type &&
+          complaintFormData.relationship?.relationship?.description?.trim()
+        );
+      case 5: // Witness Form (antes era 6)
+        return !!(complaintFormData.witness?.witnesses?.length);
+      case 6: // Reported Facts Form (antes era 7)
+        return !!(
+          complaintFormData.reportedFacts?.description &&
+          complaintFormData.reportedFacts?.description.trim()
+        );
+      case 7: // Reported Situations Form (antes era 8)
+        return !!(
+          complaintFormData.reportedSituations?.situationType &&
+          complaintFormData.reportedSituations?.situationType !== 'select' &&
+          complaintFormData.reportedSituations?.description?.trim()
+        );
+      case 8: // Safeguard Measures Form
+        return !!(
+          complaintFormData.safeguardMeasures?.measures &&
+          complaintFormData.safeguardMeasures.measures.length > 0 &&
+          complaintFormData.safeguardMeasures.measures.every(measure =>
+            measure.type &&
+            measure.responsible &&
+            measure.date &&
+            (measure.type !== SafeguardMeasureType.OTHER || measure.description)
+          )
+        );
+      case 9: // Summary Form (antes era 10)
+        return !!(
+          complaintFormData.reportedFacts?.description &&
+          complaintFormData.reportedFacts?.description.trim()
+        );
       default:
         return true;
     }
   };
 
-  const handleNextStep = () => {
-    if (isStepValid()) {
+  const canAdvanceToNextStep = () => {
+    if (step === 2) { // Paso de la víctima
+      // Siempre permitir avanzar en el paso de la víctima
+      return true;
+    }
+
+    return isStepValid();
+  };
+
+  const handleNext = () => {
+    if (canAdvanceToNextStep()) {
       nextStep();
     }
   };
 
   const renderStep = () => {
-    switch (currentStep) {
+    switch (step) {
       case 1:
         return (
           <EmployerForm
-            defaultValues={formData.employer}
+            defaultValues={complaintFormData.employer}
             onNext={handleEmployerUpdate}
             onBack={previousStep}
           />
@@ -149,7 +200,7 @@ export function ComplaintForm() {
       case 2:
         return (
           <VictimForm
-            defaultValues={formData.victim || defaultVictimFormData}
+            defaultValues={complaintFormData.victim || defaultVictimFormData}
             onNext={handleVictimUpdate}
             onBack={previousStep}
           />
@@ -157,7 +208,7 @@ export function ComplaintForm() {
       case 3:
         return (
           <AccusedForm
-            defaultValues={formData.accused}
+            defaultValues={complaintFormData.accused}
             onNext={handleAccusedNext}
             onBack={previousStep}
           />
@@ -165,59 +216,44 @@ export function ComplaintForm() {
       case 4:
         return (
           <RelationshipForm
-            defaultValues={formData.relationship}
+            defaultValues={complaintFormData.relationship}
             onNext={handleRelationshipNext}
             onBack={previousStep}
           />
         );
       case 5:
-        const situationsData: SituationsFormData = {
-          situations: {
-            hasEvidence: formData.reportedSituations?.evidence || false,
-            hasPriorCases: formData.reportedSituations?.priorCases || false,
-            wasPreviouslyReported: formData.reportedSituations?.previousReports || false
-          }
-        };
         return (
-          <SituationsForm
-            defaultValues={situationsData}
-            onNext={handleSituationsNext}
+          <WitnessForm
+            defaultValues={complaintFormData.witness}
+            onNext={handleWitnessNext}
             onBack={previousStep}
           />
         );
       case 6:
         return (
-          <WitnessForm
-            defaultValues={formData.witness}
-            onNext={handleWitnessNext}
+          <ReportedFactsForm
+            defaultValues={complaintFormData.reportedFacts}
+            onNext={handleReportedFactsNext}
             onBack={previousStep}
           />
         );
       case 7:
         return (
-          <ReportedFactsForm
-            defaultValues={formData.reportedFacts}
-            onNext={handleReportedFactsNext}
+          <ReportedSituationsForm
+            defaultValues={complaintFormData.reportedSituations}
+            onNext={handleReportedSituationsNext}
             onBack={previousStep}
           />
         );
       case 8:
         return (
-          <ReportedSituationsForm
-            defaultValues={formData.reportedSituations}
-            onNext={handleReportedSituationsNext}
-            onBack={previousStep}
-          />
-        );
-      case 9:
-        return (
           <SafeguardMeasuresForm
-            defaultValues={formData.safeguardMeasures}
+            defaultValues={complaintFormData.safeguardMeasures}
             onNext={handleSafeguardNext}
             onBack={previousStep}
           />
         );
-      case 10:
+      case 9:
         const summaryData: SummaryFormData = {
           summary: '',
           investigationBy: 'employer',
@@ -239,7 +275,7 @@ export function ComplaintForm() {
     }
   };
 
-  if (formData.isReviewing) {
+  if (complaintFormData.isReviewing) {
     return (
       <div className="flex flex-col min-h-screen">
         <div className="border-b">
@@ -268,10 +304,10 @@ export function ComplaintForm() {
           <div className="w-full max-w-[800px] mx-auto">
             <div className="rounded-2xl border border-[#EAECF0] bg-[#F9FAFB] p-8">
               <ReviewForm
-                defaultValues={formData.review}
+                defaultValues={complaintFormData.review}
                 onNext={handleReviewNext}
                 onBack={previousStep}
-                complaintData={formData}
+                complaintData={complaintFormData}
                 onEditSection={handleEditSection}
               />
             </div>
@@ -311,9 +347,9 @@ export function ComplaintForm() {
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-                  <span className="text-sm text-blue-600 font-medium whitespace-nowrap">{currentStep}/{TOTAL_STEPS}</span>
+                  <span className="text-sm text-blue-600 font-medium whitespace-nowrap">{step}/{TOTAL_STEPS}</span>
                   <div className="w-full sm:w-[300px] md:w-[400px] lg:w-[500px]">
-                    <ProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+                    <ProgressBar currentStep={step} totalSteps={TOTAL_STEPS} />
                   </div>
                 </div>
                 {isLoading && (
@@ -326,12 +362,12 @@ export function ComplaintForm() {
 
               {renderStep()}
 
-              <div className="flex justify-between">
-                {currentStep > 1 && (
+              <div className="flex justify-end gap-4">
+                {step > 1 && (
                   <Button
                     variant="outline"
                     onClick={previousStep}
-                    className="text-gray-700 border border-gray-300 flex items-center gap-2"
+                    className="text-gray-700 border border-gray-300 flex items-center gap-2 mr-auto"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Atrás
@@ -339,16 +375,16 @@ export function ComplaintForm() {
                 )}
 
                 <Button
-                  onClick={handleNextStep}
-                  disabled={!isStepValid()}
+                  onClick={handleNext}
+                  disabled={!canAdvanceToNextStep()}
                   className={cn(
-                    "px-6",
-                    isStepValid()
+                    "px-6 ml-auto",
+                    canAdvanceToNextStep()
                       ? "bg-blue-600 hover:bg-blue-700 text-white"
                       : "bg-gray-100 text-gray-400 cursor-not-allowed"
                   )}
                 >
-                  {currentStep === 10 ? "Revisar" : "Siguiente"}
+                  {step === 9 ? "Revisar" : "Siguiente"}
                 </Button>
               </div>
             </div>

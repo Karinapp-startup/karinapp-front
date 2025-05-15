@@ -1,21 +1,34 @@
-export enum RelationshipType {
-  DIRECT = "direct",
-  INDIRECT = "indirect",
-  NONE = "none"
+export const RelationshipType = {
+  DIRECT: "direct",
+  INDIRECT: "indirect",
+  NONE: "none"
+} as const;
+
+export type RelationshipTypeValues = typeof RelationshipType[keyof typeof RelationshipType];
+
+export const HierarchyLevel = {
+  SUPERIOR: "superior",
+  PEER: "peer",
+  SUBORDINATE: "subordinate"
+} as const;
+
+export type HierarchyLevelValues = typeof HierarchyLevel[keyof typeof HierarchyLevel];
+
+export interface RelationshipSituations {
+  hasEvidence: boolean;
+  hasPriorCases: boolean;
+  wasPreviouslyReported: boolean;
 }
 
-export enum HierarchyLevel {
-  SUPERIOR = "superior",
-  PEER = "peer",
-  SUBORDINATE = "subordinate"
+export interface RelationshipData {
+  type: RelationshipTypeValues;
+  hierarchyLevel: HierarchyLevelValues;
+  description: string;
+  situations: RelationshipSituations;
 }
 
 export interface RelationshipFormData {
-  relationship: {
-    type: RelationshipType;
-    hierarchyLevel: HierarchyLevel;
-    description: string;
-  };
+  relationship: RelationshipData;
   startDate: Date;
   isCurrentEmployee: boolean;
   position: string;
@@ -25,9 +38,14 @@ export interface RelationshipFormData {
 // Valores por defecto
 export const defaultRelationshipFormData: RelationshipFormData = {
   relationship: {
-    type: RelationshipType.DIRECT,
-    hierarchyLevel: HierarchyLevel.SUPERIOR,
-    description: ""
+    type: "direct",
+    hierarchyLevel: "superior",
+    description: "",
+    situations: {
+      hasEvidence: false,
+      hasPriorCases: false,
+      wasPreviouslyReported: false
+    }
   },
   startDate: new Date(),
   isCurrentEmployee: true,
@@ -36,30 +54,25 @@ export const defaultRelationshipFormData: RelationshipFormData = {
 };
 
 export interface RelationshipOption {
-  value: RelationshipType;
+  value: RelationshipTypeValues;
   label: string;
   description: string;
 }
 
 export const relationshipOptions: RelationshipOption[] = [
   {
-    value: "asymmetric_victim_dependent",
-    label: "Relación asimétrica - Víctima dependiente",
-    description: "Existe una relación asimétrica en que la víctima tiene dependencia directa o indirecta de el/la denunciado/a."
+    value: "direct",
+    label: "Direct",
+    description: "Existe una relación directa entre el denunciado y la víctima."
   },
   {
-    value: "asymmetric_accused_dependent",
-    label: "Relación asimétrica - Denunciado dependiente",
-    description: "Existe una relación asimétrica en que el/la denunciado/a tiene dependencia directa o indirecta de la víctima."
+    value: "indirect",
+    label: "Indirect",
+    description: "Existe una relación indirecta entre el denunciado y la víctima."
   },
   {
-    value: "symmetric_same_area",
-    label: "Relación simétrica - Misma área",
-    description: "Existe una relación simétrica en que el/la denunciado/a y la víctima no tienen una dependencia directa ni indirecta, pero se desempeñan en la misma área/unidad/servicio."
-  },
-  {
-    value: "symmetric_different_area",
-    label: "Relación simétrica - Diferente área",
-    description: "Existe una relación simétrica en que el/la denunciado/a y la víctima no tienen una dependencia directa ni indirecta, y no se desempeñan en la misma área/unidad/servicio."
+    value: "none",
+    label: "None",
+    description: "No existe una relación entre el denunciado y la víctima."
   }
 ]; 
