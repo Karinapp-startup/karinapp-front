@@ -156,87 +156,110 @@ export function Complaints({ complaints = [] }: ComplaintsProps) {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" className="text-gray-600">
-          <ChevronLeft className="h-4 w-4" />
-          <span>Denuncias</span>
-        </Button>
-      </div>
-
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">Índice de denuncias</h1>
-        <Dashboard complaints={paginatedComplaints} />
-      </div>
-
-      <ComplaintsHeader
-        selectedCount={selectedRows.length}
-        onExport={handleExport}
-        onSearch={handleSearch}
-        onApplyFilters={handleApplyFilters}
-        complaints={complaints}
-      />
-
-      {Object.values(advancedFilters).some(Boolean) && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {advancedFilters.employer && (
-            <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
-              🏢 {advancedFilters.employer}
-              <button
-                onClick={() => handleRemoveFilter("employer")}
-                className="ml-2 text-red-500 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </span>
-          )}
-          {advancedFilters.complainant && (
-            <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
-              👤 {advancedFilters.complainant}
-              <button
-                onClick={() => handleRemoveFilter("complainant")}
-                className="ml-2 text-red-500 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </span>
-          )}
-          {advancedFilters.status && (
-            <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
-              🟦 Estado: {advancedFilters.status}
-              <button
-                onClick={() => handleRemoveFilter("status")}
-                className="ml-2 text-red-500 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </span>
-          )}
-          {advancedFilters.dateRange?.from && advancedFilters.dateRange?.to && (
-            <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
-              📅 Vencimiento: {format(advancedFilters.dateRange.from, "dd/MM/yy")} - {format(advancedFilters.dateRange.to, "dd/MM/yy")}
-              <button
-                onClick={() => handleRemoveFilter("dateRange")}
-                className="ml-2 text-red-500 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </span>
-          )}
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="flex items-center gap-2 mb-4">
+            <Button variant="ghost" size="sm" className="text-gray-600">
+              <ChevronLeft className="h-4 w-4" />
+              <span>Denuncias</span>
+            </Button>
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900">Índice de denuncias</h1>
         </div>
-      )}
+      </div>
 
-      <ComplaintsTable
-        complaints={paginatedComplaints}
-        selectedRows={selectedRows}
-        onSelectedRowsChange={setSelectedRows}
-      />
+      {/* Content */}
+      <div className="flex-1 px-6 py-4">
+        <div className="max-w-[1400px] mx-auto space-y-4">
+          {/* Dashboard Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Dashboard />
+          </div>
 
-      <ComplaintsPagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(filteredComplaints.length / itemsPerPage)}
-        onPageChange={handlePageChange}
-      />
+          {/* Search and Filters */}
+          <div className="bg-white rounded-lg border p-4 space-y-4">
+            <ComplaintsHeader
+              selectedCount={selectedRows.length}
+              onExport={handleExport}
+              onSearch={handleSearch}
+              onApplyFilters={handleApplyFilters}
+              complaints={complaints}
+            />
+
+            {/* Active Filters */}
+            {Object.values(advancedFilters).some(Boolean) && (
+              <div className="flex flex-wrap gap-2 pt-4">
+                {advancedFilters.employer && (
+                  <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
+                    🏢 {advancedFilters.employer}
+                    <button
+                      onClick={() => handleRemoveFilter("employer")}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+                {advancedFilters.complainant && (
+                  <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
+                    👤 {advancedFilters.complainant}
+                    <button
+                      onClick={() => handleRemoveFilter("complainant")}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+                {advancedFilters.status && (
+                  <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
+                    🟦 Estado: {advancedFilters.status}
+                    <button
+                      onClick={() => handleRemoveFilter("status")}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+                {advancedFilters.dateRange?.from && advancedFilters.dateRange?.to && (
+                  <span className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm">
+                    📅 Vencimiento: {format(advancedFilters.dateRange.from, "dd/MM/yy")} - {format(advancedFilters.dateRange.to, "dd/MM/yy")}
+                    <button
+                      onClick={() => handleRemoveFilter("dateRange")}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-xl border overflow-hidden">
+            <div className="overflow-x-auto">
+              <ComplaintsTable
+                complaints={paginatedComplaints}
+                selectedRows={selectedRows}
+                onSelectedRowsChange={setSelectedRows}
+              />
+            </div>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-center py-4">
+            <ComplaintsPagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredComplaints.length / itemsPerPage)}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </div>
+      </div>
 
       <NewComplaint
         isOpen={isNewComplaintOpen}

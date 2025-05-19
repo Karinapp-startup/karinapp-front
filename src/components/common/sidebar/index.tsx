@@ -63,13 +63,11 @@ export const Sidebar = ({ className }: SidebarProps) => {
           </div>
         </div>
       )}
-      <div
-        className={cn(
-          "relative min-h-screen bg-white border-r flex flex-col transition-all duration-300",
-          isCollapsed ? "w-20" : "w-64",
-          className
-        )}
-      >
+      <div className={cn(
+        "flex flex-col border-r border-gray-200 bg-white transition-all duration-300",
+        isCollapsed ? "w-[70px]" : "w-[240px]",
+        className
+      )}>
         <Button
           variant="ghost"
           size="icon"

@@ -335,8 +335,8 @@ export function ComplaintForm() {
         <h1 className="text-xl font-semibold text-gray-900">Ingresar denuncia</h1>
       </div>
 
-      <div className="flex-1 p-6 bg-gray-50">
-        <div className="w-full max-w-[800px] mx-auto">
+      <div className="flex-1 p-6 bg-gray-50 overflow-y-auto">
+        <div className="max-w-[800px] mx-auto w-full">
           <div className="rounded-2xl border border-[#EAECF0] p-8 bg-gray-100">
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

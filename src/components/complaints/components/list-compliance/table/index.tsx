@@ -226,18 +226,13 @@ export function ComplaintsTable({
   };
 
   return (
-    <>
-      <div className="space-y-4">
-        {selectedRows.length > 0 && (
-          <div className="bg-blue-50 p-4 rounded-lg flex items-center">
-            <span>{selectedRows.length} denuncias seleccionadas</span>
-          </div>
-        )}
-
+    <div className="relative">
+      {/* Contenedor con scroll horizontal */}
+      <div className="overflow-x-auto min-w-full" style={{ minWidth: '1200px' }}>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">
+            <TableRow className="bg-gray-50 hover:bg-gray-50">
+              <TableHead className="w-[40px] py-4 sticky left-0 bg-gray-50">
                 <Checkbox
                   checked={selectedRows.length === sortedComplaints.length}
                   onCheckedChange={(checked) => {
@@ -318,22 +313,16 @@ export function ComplaintsTable({
                   <SortIcon column="step" sortConfig={sortConfig} />
                 </Button>
               </TableHead>
-              <TableHead className="w-[50px]" />
+              <TableHead className="w-[100px] text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedComplaints.map((complaint) => (
-              <TableRow
-                key={complaint.id}
-                className={cn(
-                  "transition-colors",
-                  isUpdateFromToday(complaint.lastUpdate) && "bg-blue-50/50"
-                )}
-              >
-                <TableCell>
+              <TableRow key={complaint.id} className="hover:bg-gray-50">
+                <TableCell className="py-4 sticky left-0 bg-white">
                   <Checkbox
                     checked={selectedRows.includes(complaint.id)}
-                    onCheckedChange={() => handleRowSelect(complaint.id)}
+                    onCheckedChange={(checked) => handleRowSelect(complaint.id)}
                   />
                 </TableCell>
                 <TableCell>
@@ -463,7 +452,7 @@ export function ComplaintsTable({
                 <TableCell className="text-center px-6">
                   <span className="text-sm font-medium">{complaint.step}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-right pr-4">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -494,7 +483,7 @@ export function ComplaintsTable({
         </Table>
       </div>
 
-      {/* Renderizar el modal */}
+      {/* Modales y spinners fuera del scroll */}
       {selectedComplaint && (
         <DetailModal
           complaint={selectedComplaint}
@@ -506,6 +495,6 @@ export function ComplaintsTable({
       )}
 
       {isLoading && <Spinner />}
-    </>
+    </div>
   );
 } 
