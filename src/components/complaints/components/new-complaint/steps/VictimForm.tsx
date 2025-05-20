@@ -1,163 +1,136 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { VictimFormData } from "@/interfaces/complaints/forms/victim";
+import { StepProps } from "@/interfaces/complaints/forms/forms";
+import { cn } from "@/lib/utils";
+import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
+import { personFields } from "@/interfaces/complaints/forms/victim";
+import { VictimFormValidation } from "../complements/types/victim";
+import { PersonField } from "@/interfaces/complaints/forms/victim";
 
-interface VictimFormProps {
-  formData: any;
-  updateFormData: (data: any) => void;
+interface Props extends Omit<StepProps, 'onNext'> {
+  defaultValues: VictimFormData;
+  onNext: (data: VictimFormData) => void;
+  onBack: () => void;
+  validation: VictimFormValidation;
 }
 
-export function VictimForm({ formData, updateFormData }: VictimFormProps) {
+export const VictimForm = ({ defaultValues, onNext, onBack, validation }: Props) => {
+  const {
+    formData,
+    errors,
+    touched,
+    isValid,
+    handleChange,
+    handleBlur,
+    handleIsVictimChange
+  } = validation;
+
+  const handleNext = () => {
+    console.log('🔵 VictimForm - handleNext called');
+    console.log('🔵 VictimForm - Current formData:', formData);
+
+    if (!isValid) {
+      console.log('🔴 VictimForm - Form is invalid');
+      return;
+    }
+
+    console.log('✅ VictimForm - Calling onNext with formData');
+    onNext(formData);
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    console.log('🔵 VictimForm - Checkbox changed:', checked);
+    handleIsVictimChange(checked); // Solo actualiza el estado, no avanza al siguiente paso
+  };
+
+  const renderFields = (type: 'victim' | 'complainant' = 'victim') => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {personFields.map((field: PersonField) => (
+          <div key={`${type}-${field.id}`} className="space-y-2">
+            <Label className="text-sm text-gray-600">
+              {field.label}
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              type={field.type}
+              value={type === 'victim' ? formData.victim[field.id] : formData.complainant?.[field.id] || ""}
+              onChange={(e) => handleChange(field.id, e.target.value, type)}
+              onBlur={() => handleBlur(field.id, type)}
+              placeholder={field.placeholder}
+              className={cn(
+                "w-full bg-white border-gray-200",
+                touched[type]?.[field.id] && errors[type]?.[field.id] && "border-red-500"
+              )}
+            />
+            {touched[type]?.[field.id] && errors[type]?.[field.id] && (
+              <p className="text-sm text-red-500">{errors[type][field.id]}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Datos de la víctima</h2>
+      <h2 className="text-xl font-semibold text-gray-900">Datos de la Víctima</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-600">Nombres</Label>
-          <Input 
-            placeholder="ej: Juan Pablo"
-            value={formData.victimFirstName || ''}
-            onChange={(e) => updateFormData({ victimFirstName: e.target.value })}
-            className="bg-white border-gray-200 focus:ring-blue-500"
-          />
-        </div>
+      <div className="space-y-6">
+        {renderFields('victim')}
 
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-600">Apellidos</Label>
-          <Input 
-            placeholder="ej: López González"
-            value={formData.victimLastName || ''}
-            onChange={(e) => updateFormData({ victimLastName: e.target.value })}
-            className="bg-white border-gray-200 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-600">RUT</Label>
-          <Input 
-            placeholder="ej: 18.456.987-0"
-            value={formData.victimRut || ''}
-            onChange={(e) => updateFormData({ victimRut: e.target.value })}
-            className="bg-white border-gray-200 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-600">Correo</Label>
-          <Input 
-            type="email"
-            placeholder="ej: jplopezg@email.com"
-            value={formData.victimEmail || ''}
-            onChange={(e) => updateFormData({ victimEmail: e.target.value })}
-            className="bg-white border-gray-200 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-600">Cargo</Label>
-          <Input 
-            placeholder="Desarrollador"
-            value={formData.victimPosition || ''}
-            onChange={(e) => updateFormData({ victimPosition: e.target.value })}
-            className="bg-white border-gray-200 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm text-gray-600">Departamento/Área</Label>
-          <Input 
-            placeholder="ej: Depto informática"
-            value={formData.victimDepartment || ''}
-            onChange={(e) => updateFormData({ victimDepartment: e.target.value })}
-            className="bg-white border-gray-200 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-4 pt-4">
-        <div className="flex items-start space-x-3">
-          <Checkbox 
-            id="isVictim"
-            checked={formData.isVictim}
-            onCheckedChange={(checked) => updateFormData({ isVictim: checked })}
-            className="mt-1 border-gray-300"
-          />
-          <div className="space-y-1">
-            <Label 
-              htmlFor="isVictim" 
-              className="text-sm text-gray-700"
-            >
+        <div className="mt-6">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="isVictim"
+              checked={formData.isComplainant}
+              onCheckedChange={handleCheckboxChange}
+            />
+            <Label htmlFor="isVictim" className="text-sm text-gray-700">
               La persona que realiza la denuncia es la presunta víctima de lo denunciado.
             </Label>
-            <p className="text-sm text-gray-500">
-              En caso de no ser así, registra al denunciante a continuación
-            </p>
           </div>
+          <p className="text-sm text-gray-500 mt-1">
+            En caso de no ser así, registra al denunciante a continuación
+          </p>
         </div>
 
-        {!formData.isVictim && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Nombres del denunciante</Label>
-              <Input 
-                placeholder="ej: Juan Pablo" 
-                className="bg-white border-gray-200 focus:ring-blue-500"
-                value={formData.complainantFirstName || ''}
-                onChange={(e) => updateFormData({ complainantFirstName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Apellidos del denunciante</Label>
-              <Input 
-                placeholder="ej: López González" 
-                className="bg-white border-gray-200 focus:ring-blue-500"
-                value={formData.complainantLastName || ''}
-                onChange={(e) => updateFormData({ complainantLastName: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">RUT del denunciante</Label>
-              <Input 
-                placeholder="ej: 18.456.987-0" 
-                className="bg-white border-gray-200 focus:ring-blue-500"
-                value={formData.complainantRut || ''}
-                onChange={(e) => updateFormData({ complainantRut: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Correo del denunciante</Label>
-              <Input 
-                type="email" 
-                placeholder="ej: jplopezg@email.com" 
-                className="bg-white border-gray-200 focus:ring-blue-500"
-                value={formData.complainantEmail || ''}
-                onChange={(e) => updateFormData({ complainantEmail: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Cargo del denunciante</Label>
-              <Input 
-                placeholder="Desarrollador" 
-                className="bg-white border-gray-200 focus:ring-blue-500"
-                value={formData.complainantPosition || ''}
-                onChange={(e) => updateFormData({ complainantPosition: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm text-gray-600">Departamento/Área del denunciante</Label>
-              <Input 
-                placeholder="ej: Depto informática" 
-                className="bg-white border-gray-200 focus:ring-blue-500"
-                value={formData.complainantDepartment || ''}
-                onChange={(e) => updateFormData({ complainantDepartment: e.target.value })}
-              />
-            </div>
+        {!formData.isComplainant && (
+          <div className="mt-6">
+            {renderFields('complainant')}
           </div>
         )}
       </div>
+
+      <div className="flex justify-between mt-6">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="text-gray-700 border border-gray-300 flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Atrás
+        </Button>
+
+        <Button
+          onClick={handleNext}
+          disabled={!isValid}
+          className={cn(
+            "px-6",
+            isValid
+              ? "bg-blue-600 hover:bg-blue-700 text-white"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          )}
+        >
+          Siguiente
+        </Button>
+      </div>
     </div>
   );
-} 
+}; 

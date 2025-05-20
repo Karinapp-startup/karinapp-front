@@ -1,164 +1,292 @@
-import { ComplaintType } from '@/components/complaints/components/list-compliance/complements/types';
-import { subDays, subHours } from 'date-fns';
+import { ComplaintType } from "../types";
+import { format } from "date-fns";
+
+const formatDate = (date: Date): string => {
+  return format(date, 'dd/MM/yy');
+};
+
+const formatTime = (date: Date): string => {
+  return format(date, 'HH:mm');
+};
 
 const generateActivities = (id: string) => [
   {
-    id: `${id}-1`,
-    action: "Denuncia creada",
-    date: subDays(new Date(), 5),
-    user: "Juan Pérez",
-    details: "Registro inicial de la denuncia"
+    date: formatDate(new Date()),
+    time: formatTime(new Date()),
+    description: "Registro inicial de la denuncia"
   },
   {
-    id: `${id}-2`,
-    action: "Actualización de estado",
-    date: subDays(new Date(), 2),
-    user: "María González",
-    details: "Revisión de documentación"
+    date: formatDate(new Date()),
+    time: formatTime(new Date()),
+    description: "Revisión de documentación"
   }
 ];
 
 export const complaintsMockData: ComplaintType[] = [
   {
     id: "F1239",
-    victimName: "Juan Pablo González",
     companyName: "Empresa Minera del Sur",
-    status: "Ingresada",
-    entryDate: "27/04/25",
+    victimName: "Juan Pablo González",
+    status: "recibida",
     dueDate: "27/04/25",
-    priority: "high",
-    assignedTo: "María González",
-    lastActivity: {
-      text: "Revisión inicial",
-      date: new Date()
+    createdAt: "27/04/25",
+    entryDate: "27/04/25",
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
     },
-    lastUpdate: new Date(),
-    activities: generateActivities("F1239")
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Última actualización del caso"
+    },
+    activities: generateActivities("F1239"),
+    step: "1/9",
+    priority: "high",
+    assignedTo: "Ana Martínez"
   },
   {
     id: "F1240",
     victimName: "Juan Pablo López",
     companyName: "Constructora Nacional",
-    status: "Finalizada",
+    status: "finalizada",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Carlos Ruiz",
+    step: "9/9",
     lastActivity: {
-      text: "Caso cerrado",
-      date: subHours(new Date(), 2)
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Caso cerrado"
     },
-    lastUpdate: subDays(new Date(), 1),
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1240")
   },
   {
     id: "F1223",
     victimName: "Juan Pablo Díaz",
     companyName: "Industrias Metalúrgicas SA",
-    status: "Derivada",
+    status: "aviso_inicio_investigacion",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "medium",
     assignedTo: "Ana Martínez",
+    step: "2/9",
     lastActivity: {
-      text: "Derivación a departamento legal",
-      date: subDays(new Date(), 2)
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Derivación a departamento legal"
     },
-    lastUpdate: subDays(new Date(), 2),
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1223")
   },
   {
     id: "F8989",
     victimName: "Juan Pablo Fernández",
     companyName: "Transportes del Norte",
-    status: "Incompleta",
+    status: "esperando_dt",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Pedro Soto",
-    lastActivity: "Solicitud de documentación adicional",
-    lastUpdate: new Date(),
+    step: "7/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Solicitud de documentación adicional"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F8989")
   },
   {
     id: "F1251",
     victimName: "Juan Pablo Torres",
     companyName: "Agrícola del Valle",
-    status: "Ingresada",
+    status: "observaciones_dt",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "medium",
     assignedTo: "Laura Vega",
-    lastActivity: "Asignación de responsable",
-    lastUpdate: subDays(new Date(), 1),
+    step: "8/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Asignación de responsable"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1251")
   },
   {
     id: "F1252",
     victimName: "Juan Pablo Morales",
     companyName: "Pesquera del Pacífico",
-    status: "Revisada",
+    status: "adopcion_sanciones",
     entryDate: "27/04/25",
-    dueDate: "27/04/25",
+    dueDate: "27/05/25",
+    createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Diego Muñoz",
-    lastActivity: "Revisión completada",
-    lastUpdate: subDays(new Date(), 3),
+    step: "6/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Revisión completada"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1252")
   },
   {
     id: "F1260",
     victimName: "Juan Pablo Ruiz",
     companyName: "Forestal del Sur",
-    status: "Derivada",
+    status: "derivada_dt",
     entryDate: "27/04/25",
-    dueDate: "27/04/25",
+    dueDate: "15/05/25",
+    createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Carmen Silva",
-    lastActivity: "Derivación a fiscalía",
-    lastUpdate: new Date(),
+    step: "6/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Derivación a fiscalía"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1260")
   },
   {
     id: "F1277",
     victimName: "Juan Pablo Castillo",
     companyName: "Minera Los Andes",
-    status: "Incompleta",
+    status: "en_proceso",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "medium",
     assignedTo: "Roberto Parra",
-    lastActivity: "Pendiente documentación",
-    lastUpdate: subDays(new Date(), 2),
+    step: "4/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Pendiente documentación"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1277")
   },
   {
     id: "F1300",
     victimName: "Juan Pablo Vega",
     companyName: "Constructora del Pacífico",
-    status: "Ingresada",
+    status: "esperando_dt",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "high",
     assignedTo: "Claudia Rojas",
-    lastActivity: "Registro inicial",
-    lastUpdate: new Date(),
+    step: "8/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Registro inicial"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
+    activities: generateActivities("F1300")
+  },
+  {
+    id: "F1333",
+    victimName: "Juan Pablo Simpson",
+    companyName: "Constructora Pocuro",
+    status: "esperando_dt",
+    entryDate: "27/04/25",
+    dueDate: "27/04/25",
+    createdAt: "27/04/25",
+    priority: "high",
+    assignedTo: "Claudia Rojas",
+    step: "6/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Registro inicial"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1300")
   },
   {
     id: "F1355",
     victimName: "Juan Pablo Herrera",
     companyName: "Industrial Manufacturera",
-    status: "Revisada",
+    status: "finalizada",
     entryDate: "27/04/25",
     dueDate: "27/04/25",
+    createdAt: "27/04/25",
     priority: "low",
     assignedTo: "Felipe Ortiz",
+    step: "6/9",
     lastActivity: {
-      text: "Revisión de seguimiento",
-      date: subDays(new Date(), 1)
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Revisión de seguimiento"
     },
-    lastUpdate: subDays(new Date(), 1),
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
     activities: generateActivities("F1355")
+  },
+  {
+    id: "F1666",
+    victimName: "Juan Pablo Herrera",
+    companyName: "Mecanica NFS",
+    status: "finalizada",
+    entryDate: "27/04/25",
+    dueDate: "27/04/25",
+    createdAt: "27/04/25",
+    priority: "low",
+    assignedTo: "Felipe Ortiz",
+    step: "4/9",
+    lastActivity: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date()),
+      description: "Revisión de seguimiento"
+    },
+    lastUpdate: {
+      date: formatDate(new Date()),
+      time: formatTime(new Date())
+    },
+    activities: generateActivities("F1666")
   }
-]; 
+];
+
+export const mockComplaints = complaintsMockData; 

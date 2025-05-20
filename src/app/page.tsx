@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Complaints } from "@/components/complaints/components/list-compliance";
 import { complaintsMockData } from "@/components/complaints/components/list-compliance/complements/data/mockData";
 

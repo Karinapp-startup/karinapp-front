@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   HomeIcon,
@@ -6,76 +8,163 @@ import {
   Settings2Icon,
   LogOutIcon,
   ChevronDownIcon,
-  Shield
+  Shield,
+  LogOut,
+  Settings,
+  User,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRouter, usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Spinner } from "../spinner";
+import styles from './sidebar.module.css';
 
 const menuItems = [
   { icon: FileTextIcon, label: "Denuncias", href: "/" },
 ];
 
-export const Sidebar = () => {
+interface SidebarProps {
+  className?: string;
+}
+
+export const Sidebar = ({ className }: SidebarProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleProfileClick = async () => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Esperamos 2 segundos
+    try {
+      await router.push('/profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="w-64 min-h-screen bg-white border-r flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-blue-600 p-2">
-            <Shield className="h-6 w-6 text-white" />
+    <>
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+          <div className="text-center">
+            <Spinner size="xl" />
+            <p className="mt-4 text-sm text-gray-500">Cargando...</p>
           </div>
-          <span className="font-semibold text-lg">Karin App</span>
         </div>
-      </div>
+      )}
+      <div className={cn(
+        "flex flex-col border-r border-gray-200 bg-white transition-all duration-300",
+        isCollapsed ? "w-[70px]" : "w-[240px]",
+        className
+      )}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute -right-4 top-6 h-8 w-8 rounded-full border bg-white shadow-md"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
 
-      <nav className="flex-1 p-4">
-        <div className="space-y-1">
-          {menuItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2"
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Button>
-            </Link>
-          ))}
+        <div className={cn("p-4 border-b", isCollapsed && "flex justify-center")}>
+          <div className="flex items-center gap-2">
+            <div className={styles.logoContainer}>
+              <Shield className={cn("h-6 w-6 text-white", styles.logo)} />
+            </div>
+            {!isCollapsed && <span className={styles.appName}>Karin App</span>}
+          </div>
         </div>
-      </nav>
 
-      <div className="p-4 border-t">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between">
-              <div className="flex items-center gap-2">
-                <div className="bg-gray-100 w-8 h-8 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium">JG</span>
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium">Juan Pablo González</p>
-                  <p className="text-xs text-gray-500">jp@example.com</p>
-                </div>
+        <nav className="flex-1 p-4">
+          <div className="space-y-1">
+            {menuItems.map((item) => (
+              <Link key={item.href} href={item.href}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-2",
+                    isCollapsed && "justify-center px-2"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {!isCollapsed && item.label}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </nav>
+
+        <div className="px-3 py-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger className={cn(
+              "flex items-center gap-2 p-2 w-full rounded-lg hover:bg-gray-100 transition-colors outline-none",
+              isCollapsed && "justify-center"
+            )}>
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-medium">
+                JG
               </div>
-              <ChevronDownIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>
-              <Settings2Icon className="h-4 w-4 mr-2" />
-              Configuración
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">
-              <LogOutIcon className="h-4 w-4 mr-2" />
-              Cerrar Sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {!isCollapsed && (
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium text-gray-900">Juan Pablo González</span>
+                  <span className="text-xs text-gray-500">jp@example.com</span>
+                </div>
+              )}
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              className={cn(
+                "w-56 bg-white",
+                isCollapsed && "ml-2"
+              )}
+              align={isCollapsed ? "center" : "end"}
+              sideOffset={isCollapsed ? 8 : 0}
+            >
+              {isCollapsed && (
+                <div className="px-2 py-1.5 bg-white">
+                  <p className="text-sm font-medium text-gray-900">Juan Pablo González</p>
+                  <p className="text-xs text-gray-500 truncate">jp@example.com</p>
+                </div>
+              )}
+              <DropdownMenuSeparator className="bg-gray-100" />
+
+              <DropdownMenuItem
+                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-gray-50 bg-white"
+                onClick={handleProfileClick}
+              >
+                <User size={16} className="text-gray-500" />
+                <span className="text-sm text-gray-700">Mi Perfil</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="bg-gray-100" />
+
+              <DropdownMenuItem
+                className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-red-50 text-red-600 hover:text-red-700 bg-white"
+                onClick={() => {
+                  console.log("Cerrar sesión");
+                }}
+              >
+                <LogOut size={16} />
+                <span className="text-sm font-medium">Cerrar Sesión</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+    </>
   );
 }; 

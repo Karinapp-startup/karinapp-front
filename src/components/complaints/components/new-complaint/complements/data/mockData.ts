@@ -7,8 +7,16 @@ export const complaintTypes = [
 ];
 
 export const employers = [
-  { id: 'emp1', name: 'Empresa Minera del Sur' },
-  { id: 'emp2', name: 'Constructora Nacional' },
-  { id: 'emp3', name: 'Industrias Metalúrgicas SA' },
-  { id: 'emp4', name: 'Transportes Unidos' }
-]; 
+  {
+    id: "1",
+    name: "Empresa A"
+  },
+  {
+    id: "2",
+    name: "Empresa B"
+  },
+  {
+    id: "3",
+    name: "Empresa C"
+  }
+];

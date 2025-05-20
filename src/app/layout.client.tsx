@@ -1,49 +1,25 @@
 "use client";
 
-import { Toaster } from "sonner";
 import { Sidebar } from "@/components/common/sidebar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { MenuIcon } from "lucide-react";
+import { Toaster } from 'sonner';
 
-export function RootLayoutClient({
-  children,
-  inter,
-}: {
+interface RootLayoutClientProps {
   children: React.ReactNode;
   inter: any;
-}) {
+}
+
+export function RootLayoutClient({ children, inter }: RootLayoutClientProps) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
-        <div className="flex h-screen">
-          <div className="hidden lg:block">
-            <Sidebar />
-          </div>
-
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
-                <MenuIcon className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64">
-              <Sidebar />
-            </SheetContent>
-          </Sheet>
-
-          <div className="flex-1 overflow-auto">
+    <div className={`${inter.className} min-h-screen bg-gray-50`}>
+      <div className="flex">
+        <Sidebar className="flex-shrink-0 sticky top-0 h-screen" />
+        <main className="flex-1 min-h-screen">
+          <div className="h-full mx-auto" style={{ maxWidth: '1400px', zoom: '0.8' }}>
             {children}
           </div>
-        </div>
-        <Toaster 
-          theme="light"
-          richColors
-          position="top-right"
-          expand={true}
-          closeButton={true}
-        />
-      </body>
-    </html>
+        </main>
+      </div>
+      <Toaster richColors position="top-right" />
+    </div>
   );
 } 
