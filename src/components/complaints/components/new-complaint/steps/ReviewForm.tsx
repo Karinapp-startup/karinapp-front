@@ -1,292 +1,460 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Edit2, Info } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ComplaintFormData } from "@/interfaces/complaints/forms/complaint";
+import { PersonData } from "@/interfaces/complaints/forms/victim";
+import { AccusedPerson } from "@/interfaces/complaints/forms/accused";
+import { RelationshipType, relationshipOptions, RelationshipOption } from "@/interfaces/complaints/forms/relationship";
+import { cn } from "@/lib/utils";
+import { SummaryFormData } from '@/interfaces/complaints/forms/summary';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 interface ReviewFormProps {
-  formData: any;
-  updateFormData: (data: any) => void;
+  complaintData: ComplaintFormData;
   onBack: () => void;
+  onSubmit: () => void;
 }
 
-export function ReviewForm({ formData, updateFormData, onBack }: ReviewFormProps) {
+export const ReviewForm = ({ complaintData, onBack, onSubmit }: ReviewFormProps) => {
+  const router = useRouter();
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const handleEdit = (step: number) => {
+    router.push(`/complaints/new?step=${step}`);
+  };
+
+  const handleRequestSignature = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSignature = () => {
+    router.push('/complaints/sign-complaint');
+  };
+
+  // Datos de la víctima
+  const victimData = complaintData.victim?.victim;
+
+  // Datos del denunciante si es diferente a la víctima
+  const complainantData = !complaintData.victim?.isComplainant ? complaintData.victim?.complainant : null;
+
+  // Lista de acusados
+  const accusedList = complaintData.accused?.accusedList || [];
+
+  const getRelationshipDescription = (type: RelationshipType | undefined): string => {
+    if (!type) return '';
+    const option = relationshipOptions.find((opt: RelationshipOption) => opt.value === type);
+    return option?.description || '';
+  };
+
+  // Función para validar el formulario completo
+  const isFormValid = (): boolean => {
+    const summary = complaintData.summary;
+    if (!summary) return false;
+
+    // Validar resumen (mínimo 900 caracteres)
+    const summaryValid = summary.summary.length >= 900;
+
+    // Validar que se haya seleccionado quién llevará la investigación
+    const investigationTypeValid = Boolean(summary.investigationType);
+
+    // Validar que se haya seleccionado fecha y hora
+    const dateValid = Boolean(summary.actDate);
+    const timeValid = Boolean(summary.actTime);
+
+    return summaryValid && investigationTypeValid && dateValid && timeValid;
+  };
+
+  // Función para mostrar el estado del formulario
+  const getFormStatus = (): string => {
+    const summary = complaintData.summary;
+    if (!summary?.summary) {
+      return 'Debe ingresar un resumen de la denuncia';
+    }
+    if (summary.summary.length < 900) {
+      return 'El resumen debe tener al menos 900 caracteres';
+    }
+    if (!summary.investigationType) {
+      return 'Debe seleccionar quién llevará a cabo la investigación';
+    }
+    if (!summary.actDate || !summary.actTime) {
+      return 'Debe seleccionar fecha y hora';
+    }
+    return '';
+  };
+
+  // Función auxiliar para verificar si hay situaciones reportadas
+  const hasSituations = () => {
+    return complaintData.reportedSituations?.situations &&
+      complaintData.reportedSituations.situations.length > 0;
+  };
+
   return (
-    <div className="w-full max-w-[800px] mx-auto">
-      <Card className="bg-white shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold text-gray-900">
-            Revisión de la denuncia
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Sección Empleador */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Selección del empleador</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-500">Empleador</span>
-                  <p className="text-sm text-gray-900 mt-1">{formData.employer || 'Nombre Apellido Empleador'}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Fecha de ingreso de la denuncia</span>
-                  <p className="text-sm text-gray-900 mt-1">{formData.date ? format(formData.date, "dd/MM/yyyy") : '12/12/2025'}</p>
-                </div>
-              </div>
-            </div>
-          </section>
+    <>
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <h1 className="text-xl font-semibold">Revisión de la denuncia</h1>
 
-          {/* Datos de la víctima */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700">DATOS DE LA VÍCTIMA</h3>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
-                Editar
-              </Button>
+        {/* Empleador */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">SELECCIÓN DEL EMPLEADOR</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(1)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium">Empleador</p>
+              <p className="text-sm text-gray-600">{complaintData.employer?.companyName}</p>
             </div>
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-600">Nombres</span>
-                  <p className="text-sm text-gray-900">{formData.victimFirstName}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Apellidos</span>
-                  <p className="text-sm text-gray-900">{formData.victimLastName}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">RUT</span>
-                  <p className="text-sm text-gray-900">{formData.victimRut}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Correo</span>
-                  <p className="text-sm text-gray-900">{formData.victimEmail}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Cargo</span>
-                  <p className="text-sm text-gray-900">{formData.victimPosition}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-600">Departamento/Área</span>
-                  <p className="text-sm text-gray-900">{formData.victimDepartment}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Relación entre víctima y denunciado */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Sobre la relación entre víctima y denunciado/a</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <p className="text-sm text-gray-900">
-                  Existe una relación <span className="font-medium">asimétrica</span> en que la víctima tiene <span className="font-medium">dependencia directa o indirecta</span> de el/la denunciado/a.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Situaciones denunciadas */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Sobre las presuntas situaciones denunciadas</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="space-y-2">
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                  <p className="text-sm text-gray-900">
-                    Existe evidencia de lo denunciado (correos electrónicos, fotos, etc.)
-                  </p>
-                </div>
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                  <p className="text-sm text-gray-900">
-                    Existe conocimiento de otros antecedentes de índole similar.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Testigos */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Testigos</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-xs text-gray-500">
-                    <th className="pb-2">Nombre completo</th>
-                    <th className="pb-2">Cargo</th>
-                    <th className="pb-2">Departamento/Servicio</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  <tr className="border-t border-gray-100">
-                    <td className="py-2 text-gray-900">Juan Pablo González</td>
-                    <td className="py-2 text-gray-900">Desarrollador</td>
-                    <td className="py-2 text-gray-900">Informática</td>
-                  </tr>
-                  <tr className="border-t border-gray-100">
-                    <td className="py-2 text-gray-900">Juan Pablo López</td>
-                    <td className="py-2 text-gray-900">Desarrollador</td>
-                    <td className="py-2 text-gray-900">Informática</td>
-                  </tr>
-                  <tr className="border-t border-gray-100">
-                    <td className="py-2 text-gray-900">Juan Pablo Díaz</td>
-                    <td className="py-2 text-gray-900">Desarrollador</td>
-                    <td className="py-2 text-gray-900">Informática</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          {/* Situaciones que se denuncian */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Situaciones que se denuncian</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <p className="text-sm text-gray-900">
-                  <span className="font-medium">Acoso laboral</span>
-                  <br />
-                  Requerimientos sexuales indebidos y no consentidos que afectan la situación o condiciones laborales de quien los recibe.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Medidas de resguardo */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Medidas de resguardo</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="space-y-3">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <span className="text-sm text-gray-500">Medida adoptada</span>
-                    <p className="text-sm text-gray-900 mt-1">Separación de espacios de trabajo</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Nombre de quien la adopta</span>
-                    <p className="text-sm text-gray-900 mt-1">Juan Pablo López</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-500">Medida adoptada desde</span>
-                    <p className="text-sm text-gray-900 mt-1">12/12/2025</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Resumen de la denuncia */}
-          <section>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-medium text-gray-500 uppercase">Resumen de la denuncia</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-blue-600 hover:text-blue-700 text-sm"
-              >
-                Editar
-              </Button>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <p className="text-sm text-gray-900">
-                Acá van todos los acontecimientos que denuncia ela víctima en un párrafo muy detallado y extenso. No debería tener un límite de caracteres. Acá van todos los acontecimientos que denuncia ela víctima en un párrafo muy detallado y extenso. No debería tener un límite de caracteres. Acá van todos los acontecimientos que denuncia ela víctima en un párrafo muy detallado y extenso. No debería tener un límite de caracteres. Acá van todos los acontecimientos que denuncia ela víctima en un párrafo muy detallado y extenso. No debería tener un límite de caracteres.
+            <div>
+              <p className="text-sm font-medium">Fecha de ingreso de la denuncia</p>
+              <p className="text-sm text-gray-600">
+                {complaintData.employer?.date?.toLocaleDateString()}
               </p>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-            <div className="flex items-start space-x-2">
-              <Checkbox 
-                id="confirm"
-                checked={formData.confirmed}
-                onCheckedChange={(checked) => updateFormData({ confirmed: checked })}
-                className="mt-1"
-              />
-              <div className="space-y-1">
-                <label htmlFor="confirm" className="text-sm text-gray-900 font-medium">
-                  Declaro haber revisado íntegramente la información contenida en esta denuncia, confirmando su completitud y exactitud.
-                </label>
-                <p className="text-sm text-gray-500">
-                  Una vez marcado este recuadro, la información ingresada se considerará definitiva y ya no podrá ser modificada.
-                </p>
+        {/* Víctima */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">DATOS DE LA VÍCTIMA</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(2)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {victimData && Object.entries(victimData).map(([key, value]) => (
+              <div key={key}>
+                <p className="text-sm font-medium">{getFieldLabel(key)}</p>
+                <p className="text-sm text-gray-600">{value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Denunciados */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">DATOS DE EL O LOS DENUNCIADOS</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(3)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          {accusedList.map((person: AccusedPerson, index: number) => (
+            <div key={index} className="mb-4">
+              <p className="text-sm font-medium mb-2">Denunciado {index + 1}:</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium">Nombres</p>
+                  <p className="text-sm text-gray-600">{person.firstName}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Apellidos</p>
+                  <p className="text-sm text-gray-600">{person.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">RUT</p>
+                  <p className="text-sm text-gray-600">{person.rut}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Correo</p>
+                  <p className="text-sm text-gray-600">{person.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Cargo</p>
+                  <p className="text-sm text-gray-600">{person.position}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Departamento</p>
+                  <p className="text-sm text-gray-600">{person.department}</p>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
+        </section>
 
-          <div className="flex justify-between mt-6">
+        {/* Relación */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">SOBRE LA RELACIÓN ENTRE VÍCTIMA Y DENUNCIADO/A</h2>
             <Button
-              variant="outline"
-              className="bg-white"
-              onClick={onBack}
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(4)}
+              className="text-blue-600 hover:text-blue-700"
             >
-              Atrás
-            </Button>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={!formData.confirmed}
-            >
-              Solicitar firma de denunciante
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
             </Button>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-700">
+            {getRelationshipDescription(complaintData.relationship?.relationship.type)}
+          </div>
+        </section>
+
+        {/* Testigos */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">TESTIGOS</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(5)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-sm text-gray-600">
+                  <th className="text-left font-medium">Nombre completo</th>
+                  <th className="text-left font-medium">Cargo</th>
+                  <th className="text-left font-medium">Departamento/Servicio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {complaintData.witness?.witnesses.map((witness, index) => (
+                  <tr key={index} className="text-sm text-gray-600">
+                    <td>{witness.fullName}</td>
+                    <td>{witness.position}</td>
+                    <td>{witness.department}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Hechos Denunciados */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">HECHOS DENUNCIADOS</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(6)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {complaintData.reportedFacts?.description}
+          </p>
+        </section>
+
+        {/* Situaciones que se Denuncian */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">SITUACIONES QUE SE DENUNCIAN</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(7)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {hasSituations() ? (
+              complaintData.reportedSituations!.situations.map((situation, index) => (
+                <div key={index} className="bg-blue-50 p-3 rounded-lg text-sm text-blue-700">
+                  {situation}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">No se han registrado situaciones</p>
+            )}
+          </div>
+        </section>
+
+        {/* Medidas de Resguardo */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">MEDIDAS DE RESGUARDO</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(8)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {complaintData.safeguardMeasures?.measures.map((measure, index) => (
+              <div key={index} className="text-sm">
+                <div className="font-medium">Medida adoptada:</div>
+                <div className="text-gray-600">{measure.type}</div>
+                <div className="font-medium mt-2">Nombre de quien la adopta:</div>
+                <div className="text-gray-600">{measure.responsible}</div>
+                <div className="font-medium mt-2">Medida adoptada desde:</div>
+                <div className="text-gray-600">
+                  {measure.date?.toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Resumen de la Denuncia */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">RESUMEN DE LA DENUNCIA</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(9)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {complaintData.summary?.summary}
+          </p>
+        </section>
+
+        {/* Investigación se llevará a cabo por */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">INVESTIGACIÓN SE LLEVARÁ A CABO POR</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(9)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600">
+            {complaintData.summary?.investigationType === 'employer'
+              ? '[Empleador seleccionado en el paso 1]'
+              : 'Dirección del trabajo'}
+          </p>
+        </section>
+
+        <div className="flex justify-between mt-8">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="px-4 py-2"
+          >
+            Atrás
+          </Button>
+          <Button
+            onClick={handleRequestSignature}
+            disabled={!isFormValid()}
+            className={cn(
+              "px-4 py-2",
+              isFormValid()
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            )}
+            title={!isFormValid() ? getFormStatus() : ''}
+          >
+            Solicitar firma de denunciante
+          </Button>
+        </div>
+
+        {/* Mostrar mensaje de error si el formulario no es válido */}
+        {!isFormValid() && (
+          <p className="text-sm text-red-500 text-center mt-2">
+            {getFormStatus()}
+          </p>
+        )}
+      </div>
+
+      {/* Modal de Confirmación */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Solicitar firma del denunciante</DialogTitle>
+            <DialogDescription className="space-y-3">
+              <p>
+                Se enviará un resumen de la denuncia al denunciante para que pueda ser revisada y firmada.
+                El proceso pasará a estado <span className="font-medium">Esperando Firma</span> y el formulario
+                no podrá volver a ser editado ¿Deseas continuar?
+              </p>
+              <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
+                <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+                <p className="text-sm text-blue-700">
+                  Después de que el denunciante revise y firme la denuncia, serás notificado y se solicitará
+                  tu firma para continuar con el proceso.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmSignature}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sí, solicitar firma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
-} 
+};
+
+// Función auxiliar para obtener las etiquetas de los campos
+const getFieldLabel = (key: string): string => {
+  const labels: Record<string, string> = {
+    firstName: 'Nombres',
+    lastName: 'Apellidos',
+    rut: 'RUT',
+    email: 'Correo',
+    position: 'Cargo',
+    department: 'Departamento'
+  };
+  return labels[key] || key;
+}; 

@@ -1,25 +1,28 @@
-import { AlertCircle, CheckCircle, ArrowRight, AlertTriangle, Clock } from "lucide-react";
 import { StatusConfig } from "../types";
 
 export const statusConfig: StatusConfig = {
-  Ingresada: {
-    color: "bg-orange-100 text-orange-700",
-    icon: AlertCircle
+  "Recibida": {
+    color: "bg-purple-100 text-purple-700"
   },
-  Finalizada: {
-    color: "bg-green-100 text-green-700",
-    icon: CheckCircle
+  "Aviso de Inicio Investigación": {
+    color: "bg-blue-100 text-blue-700"
   },
-  Derivada: {
-    color: "bg-blue-100 text-blue-700",
-    icon: ArrowRight
+  "Derivada a DT": {
+    color: "bg-sky-100 text-sky-700"
   },
-  Incompleta: {
-    color: "bg-purple-100 text-purple-700",
-    icon: AlertTriangle
+  "Desarrollo Investigación": {
+    color: "bg-blue-100 text-blue-700"
   },
-  Revisada: {
-    color: "bg-yellow-100 text-yellow-700",
-    icon: Clock
+  "Esperando DT": {
+    color: "bg-yellow-100 text-yellow-700"
+  },
+  "Observaciones DT": {
+    color: "bg-red-100 text-red-700"
+  },
+  "Adopción de Sanciones": {
+    color: "bg-orange-100 text-orange-700"
+  },
+  "Finalizada": {
+    color: "bg-green-100 text-green-700"
   }
 }; 
