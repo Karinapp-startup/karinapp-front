@@ -1,47 +1,84 @@
 "use client";
 
 import { useState } from "react";
-import { ComplaintFormState } from "@/interfaces/complaints/form-state";
-import { defaultEmployerFormData } from "@/interfaces/complaints/forms/employer";
-import { defaultVictimFormData } from "@/interfaces/complaints/forms/victim";
-import { defaultAccusedFormData } from "@/interfaces/complaints/forms/accused";
-import { defaultRelationshipFormData } from "@/interfaces/complaints/forms/relationship";
-import { defaultReportedSituationsFormData } from "@/interfaces/complaints/forms/reported-situations";
-import { defaultWitnessFormData } from "@/interfaces/complaints/forms/witness";
-import { defaultReportedFactsFormData } from "@/interfaces/complaints/forms/reported-facts";
-import { defaultSafeguardMeasuresFormData } from "@/interfaces/complaints/forms/safeguard";
-import { defaultSummaryFormData } from "@/interfaces/complaints/forms/summary";
-import { defaultReviewFormData } from "@/interfaces/complaints/forms/review";
 
-const initialFormState: ComplaintFormState = {
-  employer: defaultEmployerFormData,
-  victim: defaultVictimFormData,
-  accused: defaultAccusedFormData,
-  relationship: defaultRelationshipFormData,
-  reportedSituations: defaultReportedSituationsFormData,
-  witness: defaultWitnessFormData,
-  reportedFacts: defaultReportedFactsFormData,
-  safeguardMeasures: defaultSafeguardMeasuresFormData,
-  review: defaultReviewFormData,
-  currentStep: 1,
-  isReviewing: false
-};
-
-interface UseNewComplaintReturn {
-  formData: ComplaintFormState;
-  currentStep: number;
-  isLoading: boolean;
-  updateFormData: (newData: Partial<ComplaintFormState>) => void;
-  nextStep: () => void;
-  previousStep: () => void;
+interface FormData {
+  employer?: string;
+  date?: Date;
+  victimFirstName?: string;
+  victimLastName?: string;
+  victimRut?: string;
+  victimEmail?: string;
+  victimPosition?: string;
+  victimDepartment?: string;
+  isVictim?: boolean;
+  complainantFirstName?: string;
+  complainantLastName?: string;
+  complainantRut?: string;
+  complainantEmail?: string;
+  complainantPosition?: string;
+  complainantDepartment?: string;
+  accusedFirstName?: string;
+  accusedLastName?: string;
+  accusedRut?: string;
+  accusedEmail?: string;
+  accusedPosition?: string;
+  accusedDepartment?: string;
+  accusedList?: Array<{
+    fullName: string;
+    rut: string;
+    email: string;
+    position: string;
+    department: string;
+  }>;
+  relationship?: 
+    | "asymmetric_victim_dependent"
+    | "asymmetric_accused_dependent"
+    | "symmetric_same_area"
+    | "symmetric_different_area";
+  situations?: {
+    hasEvidence?: boolean;
+    hasPriorCases?: boolean;
+    wasPreviouslyReported?: boolean;
+  };
+  currentWitness?: {
+    fullName: string;
+    position: string;
+    department: string;
+  };
+  witnesses?: Array<{
+    fullName: string;
+    position: string;
+    department: string;
+  }>;
+  reportedFacts?: string;
+  situationType?: 
+    | "workplace_harassment"
+    | "sexual_harassment"
+    | "workplace_violence";
+  safeguardMeasure?: 
+    | "workspace_separation"
+    | "schedule_modification"
+    | "psychological_care"
+    | "other";
+  otherMeasure?: string;
+  safeguardResponsible?: string;
+  safeguardDate?: Date;
+  summary?: string;
+  investigationBy?: "employer" | "labor_direction";
+  actDate?: Date;
+  actHour?: string;
+  actMinute?: string;
+  isReviewing?: boolean;
+  confirmed?: boolean;
 }
 
-export const useNewComplaint = (): UseNewComplaintReturn => {
+export function useNewComplaint() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<ComplaintFormState>(initialFormState);
+  const [formData, setFormData] = useState<FormData>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const updateFormData = (newData: Partial<ComplaintFormState>) => {
+  const updateFormData = (newData: Partial<FormData>) => {
     setFormData(prev => ({ ...prev, ...newData }));
   };
 
@@ -75,4 +112,4 @@ export const useNewComplaint = (): UseNewComplaintReturn => {
     nextStep,
     previousStep
   };
-}; 
+} 

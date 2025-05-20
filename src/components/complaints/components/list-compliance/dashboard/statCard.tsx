@@ -3,36 +3,23 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
-  value: number;
-  description?: string;
-  trend?: {
-    value: number;
-    label: string;
-  };
-  icon?: React.ReactNode;
+  value: number | string;
+  trend: number;
+  icon: React.ReactNode;
 }
 
-export function StatCard({ title, value, description, trend, icon }: StatCardProps) {
-  return (
-    <div className="bg-white p-6 rounded-xl border">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        {icon && <div>{icon}</div>}
+export const StatCard = ({ title, value, trend, icon }: StatCardProps) => (
+  <Card>
+    <div className="p-4">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <p className="text-sm text-gray-500">{title}</p>
       </div>
-      <div className="mt-2">
-        <p className="text-2xl font-semibold">{value}</p>
-        {description && (
-          <p className="text-sm text-gray-500 mt-1">{description}</p>
-        )}
+      <h3 className="text-2xl font-bold">{value}</h3>
+      <div className={`flex items-center gap-1 text-sm ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>
+        {trend > 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+        <span>{Math.abs(trend)}% vs mes anterior</span>
       </div>
-      {trend && (
-        <div className="mt-4 flex items-center">
-          <span className={`text-sm font-medium ${trend.value > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {trend.value > 0 ? '+' : ''}{trend.value}%
-          </span>
-          <span className="text-sm text-gray-500 ml-2">{trend.label}</span>
-        </div>
-      )}
     </div>
-  );
-} 
+  </Card>
+); 

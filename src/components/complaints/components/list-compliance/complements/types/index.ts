@@ -9,7 +9,6 @@ export interface ComplaintType {
   dueDate: string;
   priority: 'low' | 'medium' | 'high';
   assignedTo: string;
-  step: string;
   lastActivity: {
     text: string;
     date: Date;
@@ -27,10 +26,11 @@ export interface Activity {
 }
 
 export type DueStatus = 'onTime' | 'warning' | 'overdue';
-export type StatusType = 'Recibida' | 'Aviso de Inicio Investigación' | 'Derivada a DT' | 'Desarrollo Investigación' | 'Esperando DT' | 'Observaciones DT' | 'Adopción de Sanciones' | 'Finalizada';
+export type StatusType = 'Ingresada' | 'Finalizada' | 'Derivada' | 'Incompleta' | 'Revisada';
 
 export type StatusConfig = Record<StatusType, {
   color: string;
+  icon: LucideIcon;
 }>;
 
 export interface StatusColorMap {

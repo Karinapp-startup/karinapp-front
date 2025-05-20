@@ -704,6 +704,7 @@ const sidebarItems = [
     icon: FileText,
     href: "/"
   },
+  // ... otros items ...
 ];
 
 export {
