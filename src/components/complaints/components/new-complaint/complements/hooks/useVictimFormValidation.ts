@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { defaultVictimFormData } from "@/interfaces/complaints/forms/victim";
 
 // Reutilizar las expresiones regulares
 const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
@@ -19,9 +20,16 @@ interface PersonData {
 }
 
 interface VictimFormState {
-  victim: PersonData;
-  complainant?: PersonData;
-  isVictim: boolean;
+  formData: VictimFormData;
+  errors: {
+    victim: Partial<Record<keyof PersonData, string>>;
+    complainant?: Partial<Record<keyof PersonData, string>>;
+  };
+  touched: {
+    victim: Record<keyof PersonData, boolean>;
+    complainant?: Record<keyof PersonData, boolean>;
+  };
+  isValid: boolean;
 }
 
 interface InitialData {
@@ -39,117 +47,132 @@ interface ErrorState {
   [key: string]: string;
 }
 
-export const useVictimFormValidation = (initialData: InitialData = {}) => {
-  const [formData, setFormData] = useState<VictimFormState>({
-    victim: {
-      firstName: initialData.victim?.firstName || '',
-      lastName: initialData.victim?.lastName || '',
-      rut: initialData.victim?.rut || '',
-      email: initialData.victim?.email || '',
-      position: initialData.victim?.position || '',
-      department: initialData.victim?.department || ''
-    },
-    complainant: initialData.complainant ? {
-      firstName: initialData.complainant.firstName || '',
-      lastName: initialData.complainant.lastName || '',
-      rut: initialData.complainant.rut || '',
-      email: initialData.complainant.email || '',
-      position: initialData.complainant.position || '',
-      department: initialData.complainant.department || ''
-    } : undefined,
-    isVictim: initialData.isVictim ?? true
-  });
-
-  const [touched, setTouched] = useState<TouchedState>({
-    victim: {
-      firstName: false,
-      lastName: false,
-      rut: false,
-      email: false,
-      position: false,
-      department: false
-    },
-    complainant: {
-      firstName: false,
-      lastName: false,
-      rut: false,
-      email: false,
-      position: false,
-      department: false
-    }
-  });
-
-  const [errors, setErrors] = useState<{
+interface VictimFormData {
+  victim: PersonData;
+  complainant?: PersonData;
+  isComplainant: boolean;
+  isValid: boolean;
+  touched: {
+    victim: Record<keyof PersonData, boolean>;
+    complainant?: Record<keyof PersonData, boolean>;
+  };
+  errors: {
     victim: Partial<Record<keyof PersonData, string>>;
-    complainant: Partial<Record<keyof PersonData, string>>;
-  }>({
-    victim: {},
-    complainant: {}
+    complainant?: Partial<Record<keyof PersonData, string>>;
+  };
+}
+
+const isFieldEmpty = (value: any): boolean => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') return value.trim() === '';
+  if (value instanceof Date) return false;
+  return false;
+};
+
+const validateName = (value: string): string => {
+  if (!value.trim()) return 'Este campo es requerido';
+  if (BLOCKED_CHARS_REGEX.test(value)) return 'No se permiten números ni caracteres especiales';
+  if (value.length < 2) return 'Debe tener al menos 2 caracteres';
+  return '';
+};
+
+const validateEmail = (value: string): string => {
+  if (!value.trim()) return 'El correo es requerido';
+  if (!EMAIL_REGEX.test(value)) return 'Correo electrónico inválido';
+  return '';
+};
+
+const validatePosition = (value: string): string => {
+  if (!value.trim()) return 'El cargo es requerido';
+  if (value.length < 2) return 'Debe tener al menos 2 caracteres';
+  return '';
+};
+
+const validateDepartment = (value: string): string => {
+  if (!value.trim()) return 'El departamento es requerido';
+  if (value.length < 2) return 'Debe tener al menos 2 caracteres';
+  return '';
+};
+
+const formatRut = (value: string): string => {
+  // Limpiar el RUT de cualquier formato previo
+  const cleaned = value.replace(/[^\dkK]/g, '');
+
+  if (cleaned.length <= 1) return cleaned;
+
+  // Separar cuerpo y dígito verificador
+  const body = cleaned.slice(0, -1);
+  const dv = cleaned.slice(-1).toUpperCase();
+
+  // Formatear el cuerpo con puntos
+  let formatted = '';
+  for (let i = body.length - 1, j = 0; i >= 0; i--, j++) {
+    if (j > 0 && j % 3 === 0) {
+      formatted = '.' + formatted;
+    }
+    formatted = body[i] + formatted;
+  }
+
+  return `${formatted}-${dv}`;
+};
+
+export const useVictimFormValidation = (initialData: VictimFormData) => {
+  const [state, setState] = useState<VictimFormState>({
+    formData: {
+      victim: initialData.victim,
+      isComplainant: initialData.isComplainant,
+      complainant: initialData.complainant,
+      isValid: false,
+      touched: {
+        victim: {
+          firstName: false,
+          lastName: false,
+          rut: false,
+          email: false,
+          position: false,
+          department: false
+        }
+      },
+      errors: {
+        victim: {}
+      }
+    },
+    errors: {
+      victim: {}
+    },
+    touched: {
+      victim: {
+        firstName: false,
+        lastName: false,
+        rut: false,
+        email: false,
+        position: false,
+        department: false
+      }
+    },
+    isValid: false
   });
 
-  const [isValid, setIsValid] = useState(false);
+  // Memoizamos los valores que necesitamos monitorear
+  const validationDeps = useMemo(() => ({
+    victim: state.formData.victim,
+    complainant: state.formData.complainant,
+    isComplainant: state.formData.isComplainant,
+    victimErrors: state.errors.victim,
+    complainantErrors: state.errors.complainant
+  }), [
+    state.formData.victim,
+    state.formData.complainant,
+    state.formData.isComplainant,
+    state.errors.victim,
+    state.errors.complainant
+  ]);
 
-  // Validaciones
-  const validateName = (name: string): string => {
-    if (!name) return 'Este campo es requerido';
-    if (BLOCKED_CHARS_REGEX.test(name)) return 'No se permiten números ni caracteres especiales';
-    if (!NAME_REGEX.test(name)) return 'Solo se permiten letras y espacios';
-    if (name.trim().length < 3) return 'Debe tener al menos 3 caracteres';
-    if (name.length > 50) return 'No debe exceder los 50 caracteres';
-    if (/\s{2,}/.test(name)) return 'No se permiten espacios múltiples';
-    if (/^\s|\s$/.test(name)) return 'No puede comenzar o terminar con espacios';
-    return '';
-  };
-
-  const formatRut = (value: string): string => {
-    // Limpiar el RUT de cualquier formato
-    const cleaned = value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
-
-    if (!cleaned) return '';
-
-    // Si tiene menos de 2 caracteres, retornar tal cual
-    if (cleaned.length <= 2) return cleaned;
-
-    // Separar cuerpo y dígito verificador
-    const body = cleaned.slice(0, -1);
-    const dv = cleaned.slice(-1);
-
-    // Formatear el cuerpo con puntos
-    let formatted = '';
-    for (let i = body.length - 1, j = 0; i >= 0; i--, j++) {
-      if (j === 3 || j === 6) formatted = '.' + formatted;
-      formatted = body[i] + formatted;
-    }
-
-    // Agregar el guión y el dígito verificador
-    return formatted + '-' + dv;
-  };
-
-  const validateEmail = (email: string): string => {
-    if (!email) return 'El correo es requerido';
-    if (!EMAIL_REGEX.test(email)) return 'Correo electrónico inválido';
-    return '';
-  };
-
-  const validatePosition = (position: string): string => {
-    if (!position) return 'Este campo es requerido';
-    if (BLOCKED_CHARS_REGEX.test(position)) return 'No se permiten números ni caracteres especiales';
-    if (!NAME_REGEX.test(position)) return 'Solo se permiten letras y espacios';
-    if (position.trim().length < 3) return 'Debe tener al menos 3 caracteres';
-    if (position.length > 50) return 'No debe exceder los 50 caracteres';
-    return '';
-  };
-
-  const validateDepartment = (department: string): string => {
-    if (!department) return 'Este campo es requerido';
-    if (BLOCKED_CHARS_REGEX.test(department)) return 'No se permiten números ni caracteres especiales';
-    if (!NAME_REGEX.test(department)) return 'Solo se permiten letras y espacios';
-    if (department.trim().length < 3) return 'Debe tener al menos 3 caracteres';
-    if (department.length > 50) return 'No debe exceder los 50 caracteres';
-    return '';
-  };
-
-  const handleChange = (section: 'victim' | 'complainant', field: keyof PersonData, value: string) => {
+  const handleChange = (
+    field: keyof PersonData,
+    value: string,
+    type: 'victim' | 'complainant' = 'victim'
+  ) => {
     let processedValue = value;
 
     switch (field) {
@@ -186,107 +209,86 @@ export const useVictimFormValidation = (initialData: InitialData = {}) => {
         break;
     }
 
-    setFormData(prev => ({
+    setState(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: processedValue
+      formData: {
+        ...prev.formData,
+        [type]: {
+          ...prev.formData[type],
+          [field]: processedValue
+        }
       }
     }));
 
-    validateField(section, field, processedValue);
+    validateField(type, field, processedValue);
   };
 
-  const validateField = (section: 'victim' | 'complainant', field: keyof PersonData, value: string) => {
-    let error = '';
-
-    // Solo validar si el campo ha sido tocado
-    switch (field) {
-      case 'firstName':
-      case 'lastName':
-        error = validateName(value);
-        break;
-      case 'rut':
-        error = validateRut(value);
-        break;
-      case 'email':
-        error = validateEmail(value);
-        break;
-      case 'position':
-        error = validatePosition(value);
-        break;
-      case 'department':
-        error = validateDepartment(value);
-        break;
-    }
-
-    setErrors(prev => ({
+  const handleBlur = (
+    field: keyof PersonData,
+    type: 'victim' | 'complainant' = 'victim'
+  ) => {
+    setState(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: error
-      }
-    }));
-  };
-
-  const handleBlur = (section: 'victim' | 'complainant', field: keyof PersonData) => {
-    setTouched(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: true
+      touched: {
+        ...prev.touched,
+        [type]: {
+          ...prev.touched[type],
+          [field]: true
+        }
       }
     }));
 
-    // Asegurarnos que formData[section] existe
-    const sectionData = formData[section];
+    // Asegurarnos que state[type] existe
+    const sectionData = state.formData[type];
     if (!sectionData) return;
 
     if (field === 'rut') {
       const formattedRut = formatRut(sectionData[field]);
-      setFormData(prev => ({
+      setState(prev => ({
         ...prev,
-        [section]: {
-          ...prev[section],
-          rut: formattedRut
+        formData: {
+          ...prev.formData,
+          [type]: {
+            ...prev.formData[type],
+            rut: formattedRut
+          }
         }
       }));
-      validateField(section, field, formattedRut);
+      validateField(type, field, formattedRut);
     } else {
-      validateField(section, field, sectionData[field]);
+      validateField(type, field, sectionData[field]);
     }
   };
 
   const handleIsVictimChange = (checked: boolean) => {
-    setFormData(prev => ({
+    setState(prev => ({
       ...prev,
-      isVictim: checked,
-      complainant: checked ? undefined : {
-        firstName: '',
-        lastName: '',
-        rut: '',
-        email: '',
-        position: '',
-        department: ''
-      }
-    }));
-
-    if (checked) {
-      setErrors(prev => ({
-        ...prev,
-        complainant: {}
-      }));
-    }
-
-    setTouched(prev => ({
-      ...prev,
-      complainant: {
-        firstName: false,
-        lastName: false,
-        rut: false,
-        email: false,
-        position: false,
-        department: false
+      formData: {
+        ...prev.formData,
+        isComplainant: checked,
+        complainant: checked ? undefined : {
+          firstName: '',
+          lastName: '',
+          rut: '',
+          email: '',
+          position: '',
+          department: ''
+        },
+        touched: {
+          ...prev.formData.touched,
+          complainant: checked ? undefined : {
+            firstName: false,
+            lastName: false,
+            rut: false,
+            email: false,
+            position: false,
+            department: false
+          }
+        },
+        errors: {
+          ...prev.formData.errors,
+          complainant: checked ? undefined : {}
+        }
       }
     }));
   };
@@ -336,116 +338,185 @@ export const useVictimFormValidation = (initialData: InitialData = {}) => {
     return '';
   };
 
+  const validateField = (
+    type: 'victim' | 'complainant',
+    field: keyof PersonData,
+    value: string
+  ) => {
+    let error = '';
+
+    switch (field) {
+      case 'firstName':
+      case 'lastName':
+        error = validateName(value);
+        break;
+      case 'rut':
+        error = validateRut(value);
+        break;
+      case 'email':
+        error = validateEmail(value);
+        break;
+      case 'position':
+        error = validatePosition(value);
+        break;
+      case 'department':
+        error = validateDepartment(value);
+        break;
+    }
+
+    setState(prev => ({
+      ...prev,
+      errors: {
+        ...prev.errors,
+        [type]: {
+          ...prev.errors[type],
+          [field]: error
+        }
+      }
+    }));
+
+    return error === '';
+  };
+
   // Función para validar todo el formulario
   const validateForm = () => {
     // Validar sección de víctima solo si los campos han sido tocados
     const victimErrors: ErrorState = {};
-    Object.keys(formData.victim).forEach(field => {
+    Object.keys(state.formData.victim).forEach(field => {
       const typedField = field as keyof PersonData;
-      if (touched.victim[typedField]) {
+      if (state.touched.victim[typedField]) {
         switch (typedField) {
           case 'rut':
-            victimErrors[field] = validateRut(formData.victim[typedField]);
+            victimErrors[field] = validateRut(state.formData.victim[typedField]);
             break;
           case 'email':
-            victimErrors[field] = validateEmail(formData.victim[typedField]);
+            victimErrors[field] = validateEmail(state.formData.victim[typedField]);
             break;
           case 'position':
-            victimErrors[field] = validatePosition(formData.victim[typedField]);
+            victimErrors[field] = validatePosition(state.formData.victim[typedField]);
             break;
           case 'department':
-            victimErrors[field] = validateDepartment(formData.victim[typedField]);
+            victimErrors[field] = validateDepartment(state.formData.victim[typedField]);
             break;
           default:
-            victimErrors[field] = validateName(formData.victim[typedField]);
+            victimErrors[field] = validateName(state.formData.victim[typedField]);
         }
       }
     });
 
     // Validar sección de denunciante
     let complainantErrors: ErrorState = {};
-    if (!formData.isVictim && formData.complainant) {
-      Object.keys(formData.complainant).forEach(field => {
+    if (!state.formData.isComplainant && state.formData.complainant) {
+      Object.keys(state.formData.complainant).forEach(field => {
         const typedField = field as keyof PersonData;
-        if (touched.complainant[typedField]) {
+        if (state.touched.complainant?.[typedField]) {
+          const value = state.formData.complainant?.[typedField] || '';
           switch (typedField) {
             case 'rut':
-              complainantErrors[field] = validateRut(formData.complainant![typedField]);
+              complainantErrors[field] = validateRut(value);
               break;
             case 'email':
-              complainantErrors[field] = validateEmail(formData.complainant![typedField]);
+              complainantErrors[field] = validateEmail(value);
               break;
             case 'position':
-              complainantErrors[field] = validatePosition(formData.complainant![typedField]);
+              complainantErrors[field] = validatePosition(value);
               break;
             case 'department':
-              complainantErrors[field] = validateDepartment(formData.complainant![typedField]);
+              complainantErrors[field] = validateDepartment(value);
               break;
             default:
-              complainantErrors[field] = validateName(formData.complainant![typedField]);
+              complainantErrors[field] = validateName(value);
           }
         }
       });
     }
 
-    setErrors({
-      victim: victimErrors,
-      complainant: complainantErrors
-    });
+    setState(prev => ({
+      ...prev,
+      errors: {
+        victim: victimErrors,
+        complainant: complainantErrors
+      }
+    }));
 
     // Verificar si todos los campos requeridos están llenos
-    const victimFieldsFilled = Object.values(formData.victim).every(value => value.trim() !== '');
-    const hasVictimErrors = Object.values(victimErrors).some(error => error !== '');
+    const victimFieldsFilled = Object.values(state.formData.victim).every(value => !isFieldEmpty(value));
+    const hasVictimErrors = Object.values(state.errors.victim).some(error => error !== '');
 
     // Si es la víctima, solo validar la sección de víctima
-    if (formData.isVictim) {
+    if (state.formData.isComplainant) {
       const isFormValid = victimFieldsFilled && !hasVictimErrors;
-      setIsValid(isFormValid);
+      setState(prev => ({
+        ...prev,
+        isValid: isFormValid
+      }));
       return isFormValid;
     }
 
     // Si no es la víctima, validar ambas secciones
-    if (!formData.isVictim && formData.complainant) {
-      const complainantFieldsFilled = Object.values(formData.complainant).every(value => value.trim() !== '');
-      const hasComplainantErrors = Object.values(complainantErrors).some(error => error !== '');
+    if (!state.formData.isComplainant && state.formData.complainant) {
+      const complainantFieldsFilled = Object.values(state.formData.complainant)
+        .every(value => !isFieldEmpty(value));
+
+      // Asegurarnos de que errors.complainant existe
+      const hasComplainantErrors = state.errors.complainant
+        ? Object.values(state.errors.complainant || {}).some(error => error !== '')
+        : false;
 
       const isFormValid = victimFieldsFilled && !hasVictimErrors &&
         complainantFieldsFilled && !hasComplainantErrors;
-      setIsValid(isFormValid);
+
+      setState(prev => ({
+        ...prev,
+        isValid: isFormValid
+      }));
       return isFormValid;
     }
 
-    setIsValid(false);
+    setState(prev => ({
+      ...prev,
+      isValid: false
+    }));
     return false;
   };
 
-  // No validar al iniciar, solo cuando cambian los datos
   useEffect(() => {
-    const victimFieldsFilled = Object.values(formData.victim).every(value => value.trim() !== '');
-    const hasVictimErrors = Object.values(errors.victim).some(error => error !== '');
+    const victimFieldsFilled = Object.values(validationDeps.victim)
+      .every(value => !isFieldEmpty(value));
+
+    const hasVictimErrors = Object.values(validationDeps.victimErrors)
+      .some(error => error !== '');
 
     let isFormValid = victimFieldsFilled && !hasVictimErrors;
 
-    if (!formData.isVictim && formData.complainant) {
-      const complainantFieldsFilled = Object.values(formData.complainant).every(value => value.trim() !== '');
-      const hasComplainantErrors = Object.values(errors.complainant).some(error => error !== '');
+    if (!validationDeps.isComplainant && validationDeps.complainant) {
+      const complainantFieldsFilled = Object.values(validationDeps.complainant)
+        .every(value => !isFieldEmpty(value));
+
+      // Asegurarnos de que complainantErrors existe antes de usar Object.values
+      const hasComplainantErrors = validationDeps.complainantErrors
+        ? Object.values(validationDeps.complainantErrors || {}).some(error => error !== '')
+        : false;
 
       isFormValid = isFormValid && complainantFieldsFilled && !hasComplainantErrors;
     }
 
-    setIsValid(isFormValid);
-  }, [formData, errors]);
+    if (state.isValid !== isFormValid) {
+      setState(prev => ({
+        ...prev,
+        isValid: isFormValid
+      }));
+    }
+  }, [validationDeps]);
 
   return {
-    formData,
-    errors,
-    touched,
+    formData: state.formData,
+    errors: state.errors,
+    touched: state.touched,
+    isValid: state.isValid,
     handleChange,
     handleBlur,
-    setFormData,
-    validateField,
     handleIsVictimChange,
-    isValid,
     validateForm
   };
 }; 

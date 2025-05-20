@@ -1,27 +1,14 @@
-export type SituationType = 'workplace_harassment' | 'sexual_harassment' | 'workplace_violence' | 'select';
+import { SITUATION_TYPES } from "@/components/complaints/components/new-complaint/complements/data/constants";
+
+export type SituationType = typeof SITUATION_TYPES[keyof typeof SITUATION_TYPES];
 
 export interface ReportedSituationsFormData {
-  situationType: SituationType;
-  description: string;
-  frequency: string;
-  affectedEmployees: string[];
-  impactLevel: string;
-  previousReports: boolean;
-  evidence: boolean;
-  priorCases: boolean;
-  isValid?: boolean;
+  situations: string[];
 }
 
 // Valores por defecto
 export const defaultReportedSituationsFormData: ReportedSituationsFormData = {
-  situationType: "workplace_harassment",
-  description: "",
-  frequency: "once",
-  affectedEmployees: [],
-  impactLevel: "medium",
-  previousReports: false,
-  evidence: false,
-  priorCases: false
+  situations: []
 };
 
 export interface SituationOption {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { AccusedFormData, AccusedPerson, InitialData, defaultAccusedFormData } from "@/interfaces/complaints/forms/accused";
 
 const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 const RUT_REGEX = /^(\d{1,2}(?:\.\d{3}){2}-[\dkK])$/;
@@ -18,51 +19,56 @@ export interface AccusedData {
 }
 
 interface AccusedFormState {
-  accused: AccusedData;
-}
-
-interface InitialData {
-  accused?: AccusedData;
-}
-
-interface TouchedState {
-  accused: Record<keyof AccusedData, boolean>;
-}
-
-interface ErrorState {
-  [key: string]: string;
-}
-
-export const useAccusedFormValidation = (initialData: InitialData = {}) => {
-  const [formData, setFormData] = useState<AccusedFormState>({
+  formData: InitialData;
+  errors: {
+    accusedList?: string;
     accused: {
-      firstName: initialData.accused?.firstName || '',
-      lastName: initialData.accused?.lastName || '',
-      rut: initialData.accused?.rut || '',
-      email: initialData.accused?.email || '',
-      position: initialData.accused?.position || '',
-      department: initialData.accused?.department || ''
-    }
-  });
+      firstName?: string;
+      lastName?: string;
+      position?: string;
+      department?: string;
+      rut?: string;
+      email?: string;
+    };
+  };
+  touched: {
+    accusedList: boolean;
+    accused: {
+      firstName: boolean;
+      lastName: boolean;
+      position: boolean;
+      department: boolean;
+      rut: boolean;
+      email: boolean;
+    };
+  };
+  isValid: boolean;
+}
 
-  const [touched, setTouched] = useState<TouchedState>({
+const initialState: AccusedFormState = {
+  formData: defaultAccusedFormData,
+  errors: {
+    accused: {}
+  },
+  touched: {
+    accusedList: false,
     accused: {
       firstName: false,
       lastName: false,
-      rut: false,
-      email: false,
       position: false,
-      department: false
+      department: false,
+      rut: false,
+      email: false
     }
-  });
+  },
+  isValid: false
+};
 
-  const [errors, setErrors] = useState<{
-    accused: Partial<Record<keyof AccusedData, string>>;
-  }>({
-    accused: {},
+export const useAccusedFormValidation = (initialData: InitialData) => {
+  const [state, setState] = useState<AccusedFormState>({
+    ...initialState,
+    formData: initialData
   });
-
-  const [isValid, setIsValid] = useState(false);
 
   const validateName = (name: string): string => {
     if (!name) return 'Este campo es requerido';
@@ -76,27 +82,25 @@ export const useAccusedFormValidation = (initialData: InitialData = {}) => {
   };
 
   const formatRut = (value: string): string => {
-    // Limpiar el RUT de cualquier formato
-    const cleaned = value.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+    // Limpiar el RUT de cualquier formato previo
+    const cleaned = value.replace(/[^\dkK]/g, '');
 
-    if (!cleaned) return '';
-
-    // Si tiene menos de 2 caracteres, retornar tal cual
-    if (cleaned.length <= 2) return cleaned;
+    if (cleaned.length <= 1) return cleaned;
 
     // Separar cuerpo y dígito verificador
     const body = cleaned.slice(0, -1);
-    const dv = cleaned.slice(-1);
+    const dv = cleaned.slice(-1).toUpperCase();
 
     // Formatear el cuerpo con puntos
     let formatted = '';
     for (let i = body.length - 1, j = 0; i >= 0; i--, j++) {
-      if (j === 3 || j === 6) formatted = '.' + formatted;
+      if (j > 0 && j % 3 === 0) {
+        formatted = '.' + formatted;
+      }
       formatted = body[i] + formatted;
     }
 
-    // Agregar el guión y el dígito verificador
-    return formatted + '-' + dv;
+    return `${formatted}-${dv}`;
   };
 
   const validateEmail = (email: string): string => {
@@ -136,11 +140,16 @@ export const useAccusedFormValidation = (initialData: InitialData = {}) => {
 
       case 'rut':
         // Permitir solo números, puntos y guión
-        if (/[^0-9kK.-]/.test(value)) {
+        if (/[^0-9.-]/.test(value)) {
           return;
         }
-
-        processedValue = value;
+        // Limpiar y formatear el RUT mientras se escribe
+        const cleaned = value.replace(/[^0-9]/g, '');
+        if (cleaned.length > 0) {
+          processedValue = formatRut(cleaned);
+        } else {
+          processedValue = value;
+        }
         break;
 
       case 'position':
@@ -155,15 +164,18 @@ export const useAccusedFormValidation = (initialData: InitialData = {}) => {
         break;
     }
 
-    setFormData(prev => ({
+    setState(prev => ({
       ...prev,
-      accused: {
-        ...prev.accused,
-        [field]: processedValue
+      formData: {
+        ...prev.formData,
+        accused: {
+          ...prev.formData.accused,
+          [field]: processedValue
+        }
       }
     }));
 
-    if (touched.accused[field]) handleBlur(field);
+    validateField(field, processedValue);
   };
 
   const validateField = (field: keyof AccusedData, value: string) => {
@@ -188,38 +200,34 @@ export const useAccusedFormValidation = (initialData: InitialData = {}) => {
         break;
     }
 
-    setErrors(prev => ({
+    setState(prev => ({
       ...prev,
-      accused: {
-        ...prev.accused,
-        [field]: error
+      errors: {
+        ...prev.errors,
+        accused: {
+          ...prev.errors.accused,
+          [field]: error
+        }
       }
     }));
+
+    return error === '';
   };
 
   const handleBlur = (field: keyof AccusedData) => {
-    setTouched(prev => ({
+    setState(prev => ({
       ...prev,
-      accused: {
-        ...prev.accused,
-        [field]: true
+      touched: {
+        ...prev.touched,
+        accused: {
+          ...prev.touched.accused,
+          [field]: true
+        }
       }
     }));
 
-    const value = formData.accused[field];
-
-    if (field === 'rut') {
-      const formattedRut = formatRut(value);
-      setFormData(prev => ({
-        accused: {
-          ...prev.accused,
-          rut: formattedRut
-        }
-      }));
-      validateField(field, formattedRut);
-    } else {
-      validateField(field, value);
-    }
+    const value = state.formData.accused[field];
+    validateField(field, value);
   };
 
   const validateRut = (rut: string): string => {
@@ -268,80 +276,83 @@ export const useAccusedFormValidation = (initialData: InitialData = {}) => {
   };
 
   const validateForm = () => {
-    const accusedErrors: ErrorState = {};
-
-    Object.keys(formData.accused).forEach(field => {
-      const typedField = field as keyof AccusedData;
-
-      if (touched.accused[typedField]) {
-        switch (typedField) {
-          case 'rut':
-            accusedErrors[field] = validateRut(formData.accused[typedField]);
-            break;
-          case 'email':
-            accusedErrors[field] = validateEmail(formData.accused[typedField]);
-            break;
-          case 'position':
-            accusedErrors[field] = validatePosition(formData.accused[typedField]);
-            break;
-          case 'department':
-            accusedErrors[field] = validateDepartment(formData.accused[typedField]);
-            break;
-          default:
-            accusedErrors[field] = validateName(formData.accused[typedField]);
-        }
+    const accusedErrors = {
+      accused: {
+        firstName: validateName(state.formData.accused.firstName),
+        lastName: validateName(state.formData.accused.lastName),
+        rut: validateRut(state.formData.accused.rut),
+        email: validateEmail(state.formData.accused.email),
+        position: validatePosition(state.formData.accused.position),
+        department: validateDepartment(state.formData.accused.department)
       }
-    });
+    };
 
-    setErrors({ accused: accusedErrors });
+    setState(prev => ({
+      ...prev,
+      errors: accusedErrors
+    }));
 
-    const allFieldsFilled = Object.values(formData.accused).every(value => value.trim() !== '');
-    const hasErrors = Object.values(accusedErrors).some(error => error !== '');
+    const allFieldsFilled = Object.values(state.formData.accused).every(value => value.trim() !== '');
+    const hasErrors = Object.values(accusedErrors.accused).some(error => error !== '');
 
     const isFormValid = allFieldsFilled && !hasErrors;
-    setIsValid(isFormValid);
+    setState(prev => ({
+      ...prev,
+      isValid: isFormValid
+    }));
     return isFormValid;
   };
 
   useEffect(() => {
-    const allFieldsFilled = Object.values(formData.accused).every(value => value.trim() !== '');
-    const hasErrors = Object.values(errors.accused).some(error => error !== '');
+    const allFieldsFilled = Object.values(state.formData.accused).every(value => value.trim() !== '');
+    const hasErrors = Object.values(state.errors.accused || {}).some(error => error !== '');
 
-    setIsValid(allFieldsFilled && !hasErrors);
-  }, [formData, errors]);
+    setState(prev => ({
+      ...prev,
+      isValid: allFieldsFilled && !hasErrors
+    }));
+  }, [state.formData, state.errors]);
 
-  return {
-    formData,
-    errors,
-    touched,
-    isValid,
-    handleChange,
-    handleBlur,
-    validateForm,
-    setFormData,
-    resetForm: () => {
-      setFormData({
+  const resetForm = () => {
+    setState({
+      formData: {
+        ...defaultAccusedFormData,
         accused: {
           firstName: '',
           lastName: '',
-          rut: '',
-          email: '',
           position: '',
           department: '',
-          ...(initialData.accused || {})
+          rut: '',
+          email: ''
         }
-      });
-      setErrors({ accused: {} });
-      setTouched({
+      },
+      errors: {
+        accused: {}
+      },
+      touched: {
+        accusedList: false,
         accused: {
           firstName: false,
           lastName: false,
-          rut: false,
-          email: false,
           position: false,
-          department: false
+          department: false,
+          rut: false,
+          email: false
         }
-      });
-    }
+      },
+      isValid: false
+    });
+  };
+
+  return {
+    formData: state.formData,
+    errors: state.errors,
+    touched: state.touched,
+    isValid: state.isValid,
+    handleChange,
+    handleBlur,
+    validateForm,
+    setFormData: setState,
+    resetForm
   };
 };

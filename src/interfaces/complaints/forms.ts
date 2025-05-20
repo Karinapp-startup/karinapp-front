@@ -14,7 +14,7 @@ export interface ComplaintFormData {
 }
 
 export interface StepProps {
-  onNext: () => void;
-  onBack: () => void;
-  isLastStep?: boolean;
+  defaultValues: any;
+  onNext: (data: any) => void;
+  onBack?: () => void;
 } 

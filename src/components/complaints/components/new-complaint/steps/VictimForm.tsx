@@ -2,123 +2,135 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
-import { cn } from "@/lib/utils";
 import { VictimFormData } from "@/interfaces/complaints/forms/victim";
+import { StepProps } from "@/interfaces/complaints/forms/forms";
+import { cn } from "@/lib/utils";
+import { useVictimFormValidation } from "../complements/hooks/useVictimFormValidation";
+import { personFields } from "@/interfaces/complaints/forms/victim";
+import { VictimFormValidation } from "../complements/types/victim";
+import { PersonField } from "@/interfaces/complaints/forms/victim";
 
-interface Props {
-  defaultValues?: VictimFormData;
+interface Props extends Omit<StepProps, 'onNext'> {
+  defaultValues: VictimFormData;
   onNext: (data: VictimFormData) => void;
   onBack: () => void;
-  validation: ReturnType<typeof useVictimFormValidation>;
+  validation: VictimFormValidation;
 }
 
-export function VictimForm({ onNext, validation }: Props) {
+export const VictimForm = ({ defaultValues, onNext, onBack, validation }: Props) => {
   const {
     formData,
     errors,
     touched,
+    isValid,
     handleChange,
     handleBlur,
-    setFormData,
     handleIsVictimChange
-  } = validation
+  } = validation;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onNext({
-      victim: formData.victim,
-      complainant: formData.complainant,
-      isVictim: formData.isVictim
-    });
+  const handleNext = () => {
+    console.log('🔵 VictimForm - handleNext called');
+    console.log('🔵 VictimForm - Current formData:', formData);
+
+    if (!isValid) {
+      console.log('🔴 VictimForm - Form is invalid');
+      return;
+    }
+
+    console.log('✅ VictimForm - Calling onNext with formData');
+    onNext(formData);
   };
 
-  const renderField = (
-    section: "victim" | "complainant",
-    field: keyof typeof formData.victim,
-    label: string,
-    placeholder: string,
-    type = "text"
-  ) => (
-    <div className="space-y-2">
-      <Label className="text-sm text-gray-600">
-        {label}<span className="text-red-500 ml-1">*</span>
-      </Label>
-      <Input
-        type={type}
-        value={formData[section]?.[field] || ''}
-        onChange={(e) => handleChange(section, field, e.target.value)}
-        onBlur={() => handleBlur(section, field)}
-        placeholder={placeholder}
-        className={cn(
-          "w-full h-10 bg-white border-gray-200 focus:ring-blue-500",
-          (touched[section][field] || errors[section][field]) &&
-          errors[section][field] && "border-red-500 focus:ring-red-500"
-        )}
-      />
-      {(touched[section][field] || errors[section][field]) &&
-        errors[section][field] && (
-          <p className="text-sm text-red-500">{errors[section][field]}</p>
-        )}
-    </div>
-  );
+  const handleCheckboxChange = (checked: boolean) => {
+    console.log('🔵 VictimForm - Checkbox changed:', checked);
+    handleIsVictimChange(checked); // Solo actualiza el estado, no avanza al siguiente paso
+  };
+
+  const renderFields = (type: 'victim' | 'complainant' = 'victim') => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {personFields.map((field: PersonField) => (
+          <div key={`${type}-${field.id}`} className="space-y-2">
+            <Label className="text-sm text-gray-600">
+              {field.label}
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Input
+              type={field.type}
+              value={type === 'victim' ? formData.victim[field.id] : formData.complainant?.[field.id] || ""}
+              onChange={(e) => handleChange(field.id, e.target.value, type)}
+              onBlur={() => handleBlur(field.id, type)}
+              placeholder={field.placeholder}
+              className={cn(
+                "w-full bg-white border-gray-200",
+                touched[type]?.[field.id] && errors[type]?.[field.id] && "border-red-500"
+              )}
+            />
+            {touched[type]?.[field.id] && errors[type]?.[field.id] && (
+              <p className="text-sm text-red-500">{errors[type][field.id]}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Datos de la víctima</h2>
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold text-gray-900">Datos de la Víctima</h2>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-6">
-          {renderField("victim", "firstName", "Nombres", "ej: Juan Pablo")}
-          {renderField("victim", "lastName", "Apellidos", "ej: López González")}
-        </div>
-        <div className="grid grid-cols-2 gap-6">
-          {renderField("victim", "rut", "RUT", "ej: 18.456.987-0")}
-          {renderField("victim", "email", "Correo", "ej: jplopezg@email.com", "email")}
-        </div>
-        <div className="grid grid-cols-2 gap-6">
-          {renderField("victim", "position", "Cargo", "Desarrollador")}
-          {renderField("victim", "department", "Departamento/Área", "ej: Depto informática")}
-        </div>
-      </div>
+      <div className="space-y-6">
+        {renderFields('victim')}
 
-      <div className="space-y-4 pt-4">
-        <div className="flex items-start space-x-3">
-          <Checkbox
-            checked={formData.isVictim}
-            onCheckedChange={handleIsVictimChange}
-            className="mt-1 border-gray-300"
-          />
-          <div className="space-y-1">
-            <Label className="text-sm text-gray-700">
+        <div className="mt-6">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="isVictim"
+              checked={formData.isComplainant}
+              onCheckedChange={handleCheckboxChange}
+            />
+            <Label htmlFor="isVictim" className="text-sm text-gray-700">
               La persona que realiza la denuncia es la presunta víctima de lo denunciado.
             </Label>
-            <p className="text-sm text-gray-500">
-              En caso de no ser así, registra al denunciante a continuación
-            </p>
           </div>
+          <p className="text-sm text-gray-500 mt-1">
+            En caso de no ser así, registra al denunciante a continuación
+          </p>
         </div>
 
-        {!formData.isVictim && (
-          <div className="pt-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-6">
-                {renderField("complainant", "firstName", "Nombres", "ej: Juan Pablo")}
-                {renderField("complainant", "lastName", "Apellidos", "ej: López González")}
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                {renderField("complainant", "rut", "RUT", "ej: 18.456.987-0")}
-                {renderField("complainant", "email", "Correo", "ej: jplopezg@email.com", "email")}
-              </div>
-              <div className="grid grid-cols-2 gap-6">
-                {renderField("complainant", "position", "Cargo", "Desarrollador")}
-                {renderField("complainant", "department", "Departamento/Área", "ej: Depto informática")}
-              </div>
-            </div>
+        {!formData.isComplainant && (
+          <div className="mt-6">
+            {renderFields('complainant')}
           </div>
         )}
       </div>
-    </form>
+
+      <div className="flex justify-between mt-6">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="text-gray-700 border border-gray-300 flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Atrás
+        </Button>
+
+        <Button
+          onClick={handleNext}
+          disabled={!isValid}
+          className={cn(
+            "px-6",
+            isValid
+              ? "bg-blue-600 hover:bg-blue-700 text-white"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          )}
+        >
+          Siguiente
+        </Button>
+      </div>
+    </div>
   );
-} 
+}; 

@@ -1,23 +1,27 @@
+import { INVESTIGATION_TYPES } from '../../components/complaints/components/new-complaint/complements/data/constants';
+
 export type InvestigationType = 'employer' | 'labor_direction';
 
 export interface SummaryFormData {
   summary: string;
-  investigationBy: InvestigationType;
-  actDate: Date;
-  actTime: {
-    hour: string;
-    minute: string;
-  };
+  investigationType: 'employer' | 'labor_direction';
+  actDate: Date | null;
+  actTime: string;
+  employer?: EmployerFormData;
+  victim?: VictimFormData;
+  accused?: AccusedFormData;
+  relationship?: RelationshipFormData;
+  witness?: WitnessFormData;
+  reportedFacts?: ReportedFactsFormData;
+  reportedSituations?: ReportedSituationsFormData;
+  safeguardMeasures?: SafeguardMeasuresFormData;
 }
 
 export const defaultSummaryFormData: SummaryFormData = {
   summary: '',
-  investigationBy: 'employer',
-  actDate: new Date(),
-  actTime: {
-    hour: '09',
-    minute: '00'
-  }
+  investigationType: 'employer',
+  actDate: null,
+  actTime: ''
 };
 
 export interface InvestigationOption {

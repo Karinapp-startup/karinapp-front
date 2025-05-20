@@ -1,306 +1,460 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { InfoIcon } from "lucide-react";
-import { useState } from "react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ReviewFormData, reviewSections } from "@/interfaces/complaints/forms/review";
-import { StepProps } from "@/interfaces/complaints/forms";
-import { ComplaintFormState } from "@/interfaces/complaints/form-state";
+import { Edit2, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ComplaintFormData } from "@/interfaces/complaints/forms/complaint";
+import { PersonData } from "@/interfaces/complaints/forms/victim";
+import { AccusedPerson } from "@/interfaces/complaints/forms/accused";
+import { RelationshipType, relationshipOptions, RelationshipOption } from "@/interfaces/complaints/forms/relationship";
+import { cn } from "@/lib/utils";
+import { SummaryFormData } from '@/interfaces/complaints/forms/summary';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
-interface Props extends Omit<StepProps, 'onNext'> {
-  defaultValues: ReviewFormData;
-  complaintData: ComplaintFormState;
-  onNext: (data: ReviewFormData) => void;
-  onEditSection: (section: string) => void;
+interface ReviewFormProps {
+  complaintData: ComplaintFormData;
+  onBack: () => void;
+  onSubmit: () => void;
 }
 
-export const ReviewForm = ({ onNext, onBack, defaultValues, complaintData, onEditSection }: Props) => {
-  const [showSignatureModal, setShowSignatureModal] = useState(false);
+export const ReviewForm = ({ complaintData, onBack, onSubmit }: ReviewFormProps) => {
   const router = useRouter();
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const handleEdit = (step: number) => {
+    router.push(`/complaints/new?step=${step}`);
+  };
 
   const handleRequestSignature = () => {
-    setShowSignatureModal(true);
+    setShowConfirmDialog(true);
   };
 
   const handleConfirmSignature = () => {
-    setShowSignatureModal(false);
     router.push('/complaints/sign-complaint');
   };
 
-  const handleConfirmChange = (checked: boolean) => {
-    onNext({
-      ...defaultValues,
-      confirmed: checked
-    });
+  // Datos de la víctima
+  const victimData = complaintData.victim?.victim;
+
+  // Datos del denunciante si es diferente a la víctima
+  const complainantData = !complaintData.victim?.isComplainant ? complaintData.victim?.complainant : null;
+
+  // Lista de acusados
+  const accusedList = complaintData.accused?.accusedList || [];
+
+  const getRelationshipDescription = (type: RelationshipType | undefined): string => {
+    if (!type) return '';
+    const option = relationshipOptions.find((opt: RelationshipOption) => opt.value === type);
+    return option?.description || '';
   };
 
-  const renderSection = (title: string, content: React.ReactNode) => (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xs font-medium text-gray-500 uppercase">{title}</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEditSection(title)}
-          className="text-blue-600 hover:text-blue-700"
-        >
-          Editar
-        </Button>
-      </div>
-      {content}
-    </div>
-  );
+  // Función para validar el formulario completo
+  const isFormValid = (): boolean => {
+    const summary = complaintData.summary;
+    if (!summary) return false;
+
+    // Validar resumen (mínimo 900 caracteres)
+    const summaryValid = summary.summary.length >= 900;
+
+    // Validar que se haya seleccionado quién llevará la investigación
+    const investigationTypeValid = Boolean(summary.investigationType);
+
+    // Validar que se haya seleccionado fecha y hora
+    const dateValid = Boolean(summary.actDate);
+    const timeValid = Boolean(summary.actTime);
+
+    return summaryValid && investigationTypeValid && dateValid && timeValid;
+  };
+
+  // Función para mostrar el estado del formulario
+  const getFormStatus = (): string => {
+    const summary = complaintData.summary;
+    if (!summary?.summary) {
+      return 'Debe ingresar un resumen de la denuncia';
+    }
+    if (summary.summary.length < 900) {
+      return 'El resumen debe tener al menos 900 caracteres';
+    }
+    if (!summary.investigationType) {
+      return 'Debe seleccionar quién llevará a cabo la investigación';
+    }
+    if (!summary.actDate || !summary.actTime) {
+      return 'Debe seleccionar fecha y hora';
+    }
+    return '';
+  };
+
+  // Función auxiliar para verificar si hay situaciones reportadas
+  const hasSituations = () => {
+    return complaintData.reportedSituations?.situations &&
+      complaintData.reportedSituations.situations.length > 0;
+  };
 
   return (
     <>
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Revisión de la denuncia</h2>
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <h1 className="text-xl font-semibold">Revisión de la denuncia</h1>
 
-        <div className="space-y-6">
-          {renderSection("SELECCIÓN DEL EMPLEADOR", (
-            <div className="bg-white rounded-lg p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-500">Empleador</span>
-                  <p className="text-sm text-gray-900">{complaintData.employer?.companyName}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Fecha de ingreso de la denuncia</span>
-                  <p className="text-sm text-gray-900">{complaintData.employer?.date?.toLocaleDateString()}</p>
-                </div>
-              </div>
+        {/* Empleador */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">SELECCIÓN DEL EMPLEADOR</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(1)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium">Empleador</p>
+              <p className="text-sm text-gray-600">{complaintData.employer?.companyName}</p>
             </div>
-          ))}
-
-          {renderSection("DATOS DE LA VÍCTIMA", (
-            <div className="bg-white rounded-lg p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-gray-500">Nombres</span>
-                  <p className="text-sm text-gray-900">{complaintData.victim?.victim?.firstName}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Apellidos</span>
-                  <p className="text-sm text-gray-900">{complaintData.victim?.victim?.lastName}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">RUT</span>
-                  <p className="text-sm text-gray-900">{complaintData.victim?.victim?.rut}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Correo</span>
-                  <p className="text-sm text-gray-900">{complaintData.victim?.victim?.email}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Cargo</span>
-                  <p className="text-sm text-gray-900">{complaintData.victim?.victim?.position}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-500">Departamento</span>
-                  <p className="text-sm text-gray-900">{complaintData.victim?.victim?.department}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Sección similar para DATOS DEL DENUNCIANTE si existe */}
-          {complaintData.victim?.complainant && renderSection("DATOS DEL DENUNCIANTE", (
-            <div className="bg-white rounded-lg p-4 space-y-4">
-              {/* Contenido similar al de la víctima */}
-            </div>
-          ))}
-
-          {renderSection("DATOS DE EL O LOS DENUNCIADOS", (
-            <div className="bg-white rounded-lg p-4 space-y-4">
-              {complaintData.accused?.accusedList?.map((accused, index) => (
-                <div key={index} className="space-y-4">
-                  <p className="text-sm text-gray-500">Denunciado {index + 1}:</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm text-gray-500">Nombres</span>
-                      <p className="text-sm text-gray-900">{accused.fullName}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">RUT</span>
-                      <p className="text-sm text-gray-900">{accused.rut}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">Correo</span>
-                      <p className="text-sm text-gray-900">{accused.email}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">Cargo</span>
-                      <p className="text-sm text-gray-900">{accused.position}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500">Departamento</span>
-                      <p className="text-sm text-gray-900">{accused.department}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
-
-          {renderSection("SOBRE LA RELACIÓN ENTRE VÍCTIMA Y DENUNCIADO/A", (
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-blue-600">
-                {complaintData.relationship?.relationship?.type}
+            <div>
+              <p className="text-sm font-medium">Fecha de ingreso de la denuncia</p>
+              <p className="text-sm text-gray-600">
+                {complaintData.employer?.date?.toLocaleDateString()}
               </p>
             </div>
-          ))}
+          </div>
+        </section>
 
-          {renderSection("SOBRE LAS PRESUNTAS SITUACIONES DENUNCIADAS", (
-            <div className="bg-white rounded-lg p-4 space-y-2">
-              {complaintData.relationship?.relationship?.situations?.hasEvidence && (
-                <p className="text-sm text-blue-600">Existe evidencia de lo denunciado (correos electrónicos, fotos, etc.)</p>
-              )}
-              {complaintData.relationship?.relationship?.situations?.hasPriorCases && (
-                <p className="text-sm text-blue-600">Existe conocimiento de otros antecedentes de índole similar.</p>
-              )}
-            </div>
-          ))}
+        {/* Víctima */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">DATOS DE LA VÍCTIMA</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(2)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {victimData && Object.entries(victimData).map(([key, value]) => (
+              <div key={key}>
+                <p className="text-sm font-medium">{getFieldLabel(key)}</p>
+                <p className="text-sm text-gray-600">{value}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-          {renderSection("TESTIGOS", (
-            <div className="bg-white rounded-lg p-4">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-sm text-gray-500">
-                    <th>Nombre completo</th>
-                    <th>Cargo</th>
-                    <th>Departamento/Servicio</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {complaintData.witness?.witnesses?.map((witness, index) => (
-                    <tr key={index} className="text-sm text-gray-900">
-                      <td>{witness.fullName}</td>
-                      <td>{witness.position}</td>
-                      <td>{witness.department}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
-
-          {renderSection("HECHOS DENUNCIADOS", (
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-900">{complaintData.reportedFacts?.description}</p>
-            </div>
-          ))}
-
-          {renderSection("SITUACIONES QUE SE DENUNCIAN", (
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-blue-600">{complaintData.reportedSituations?.description}</p>
-            </div>
-          ))}
-
-          {renderSection("MEDIDAS DE RESGUARDO", (
-            <div className="bg-white rounded-lg p-4 space-y-4">
-              {complaintData.safeguardMeasures?.measures?.map((measure, index) => (
-                <div key={index}>
-                  <p className="text-sm text-gray-500">Medida adoptada</p>
-                  <p className="text-sm text-gray-900">{measure.type}</p>
-                  <p className="text-sm text-gray-500">Nombre de quien la adopta</p>
-                  <p className="text-sm text-gray-900">{measure.responsible}</p>
-                  <p className="text-sm text-gray-500">Medida adoptada desde</p>
-                  <p className="text-sm text-gray-900">{measure.date?.toLocaleDateString()}</p>
+        {/* Denunciados */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">DATOS DE EL O LOS DENUNCIADOS</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(3)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          {accusedList.map((person: AccusedPerson, index: number) => (
+            <div key={index} className="mb-4">
+              <p className="text-sm font-medium mb-2">Denunciado {index + 1}:</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium">Nombres</p>
+                  <p className="text-sm text-gray-600">{person.firstName}</p>
                 </div>
-              ))}
-            </div>
-          ))}
-
-          {renderSection("RESUMEN DE LA DENUNCIA", (
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-900">{complaintData.reportedFacts?.description}</p>
-            </div>
-          ))}
-
-          {renderSection("INVESTIGACIÓN SE LLEVARÁ A CABO POR", (
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-900">[Empleador seleccionado en el paso 1]</p>
-            </div>
-          ))}
-
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="confirm"
-                checked={defaultValues.confirmed}
-                onCheckedChange={(checked) => handleConfirmChange(checked as boolean)}
-                className="mt-1"
-              />
-              <div className="space-y-1">
-                <label htmlFor="confirm" className="text-sm text-gray-900">
-                  Declaro haber revisado íntegramente la información contenida en esta denuncia, confirmando su completitud y exactitud.
-                </label>
-                <p className="text-sm text-gray-500">
-                  Una vez marcado este recuadro, la información ingresada se considerará definitiva y no podrá ser modificada.
-                </p>
+                <div>
+                  <p className="text-sm font-medium">Apellidos</p>
+                  <p className="text-sm text-gray-600">{person.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">RUT</p>
+                  <p className="text-sm text-gray-600">{person.rut}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Correo</p>
+                  <p className="text-sm text-gray-600">{person.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Cargo</p>
+                  <p className="text-sm text-gray-600">{person.position}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Departamento</p>
+                  <p className="text-sm text-gray-600">{person.department}</p>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
+        </section>
 
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={onBack}>
-              Atrás
-            </Button>
+        {/* Relación */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">SOBRE LA RELACIÓN ENTRE VÍCTIMA Y DENUNCIADO/A</h2>
             <Button
-              disabled={!defaultValues.confirmed}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={handleRequestSignature}
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(4)}
+              className="text-blue-600 hover:text-blue-700"
             >
-              Solicitar firma de denunciante
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
             </Button>
           </div>
+          <div className="bg-blue-50 p-3 rounded-lg text-sm text-blue-700">
+            {getRelationshipDescription(complaintData.relationship?.relationship.type)}
+          </div>
+        </section>
+
+        {/* Testigos */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">TESTIGOS</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(5)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-sm text-gray-600">
+                  <th className="text-left font-medium">Nombre completo</th>
+                  <th className="text-left font-medium">Cargo</th>
+                  <th className="text-left font-medium">Departamento/Servicio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {complaintData.witness?.witnesses.map((witness, index) => (
+                  <tr key={index} className="text-sm text-gray-600">
+                    <td>{witness.fullName}</td>
+                    <td>{witness.position}</td>
+                    <td>{witness.department}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Hechos Denunciados */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">HECHOS DENUNCIADOS</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(6)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {complaintData.reportedFacts?.description}
+          </p>
+        </section>
+
+        {/* Situaciones que se Denuncian */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">SITUACIONES QUE SE DENUNCIAN</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(7)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {hasSituations() ? (
+              complaintData.reportedSituations!.situations.map((situation, index) => (
+                <div key={index} className="bg-blue-50 p-3 rounded-lg text-sm text-blue-700">
+                  {situation}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 italic">No se han registrado situaciones</p>
+            )}
+          </div>
+        </section>
+
+        {/* Medidas de Resguardo */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">MEDIDAS DE RESGUARDO</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(8)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <div className="space-y-4">
+            {complaintData.safeguardMeasures?.measures.map((measure, index) => (
+              <div key={index} className="text-sm">
+                <div className="font-medium">Medida adoptada:</div>
+                <div className="text-gray-600">{measure.type}</div>
+                <div className="font-medium mt-2">Nombre de quien la adopta:</div>
+                <div className="text-gray-600">{measure.responsible}</div>
+                <div className="font-medium mt-2">Medida adoptada desde:</div>
+                <div className="text-gray-600">
+                  {measure.date?.toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Resumen de la Denuncia */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">RESUMEN DE LA DENUNCIA</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(9)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600 whitespace-pre-wrap">
+            {complaintData.summary?.summary}
+          </p>
+        </section>
+
+        {/* Investigación se llevará a cabo por */}
+        <section className="bg-white rounded-lg border p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-sm font-medium text-gray-500">INVESTIGACIÓN SE LLEVARÁ A CABO POR</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEdit(9)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600">
+            {complaintData.summary?.investigationType === 'employer'
+              ? '[Empleador seleccionado en el paso 1]'
+              : 'Dirección del trabajo'}
+          </p>
+        </section>
+
+        <div className="flex justify-between mt-8">
+          <Button
+            variant="outline"
+            onClick={onBack}
+            className="px-4 py-2"
+          >
+            Atrás
+          </Button>
+          <Button
+            onClick={handleRequestSignature}
+            disabled={!isFormValid()}
+            className={cn(
+              "px-4 py-2",
+              isFormValid()
+                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+            )}
+            title={!isFormValid() ? getFormStatus() : ''}
+          >
+            Solicitar firma de denunciante
+          </Button>
         </div>
+
+        {/* Mostrar mensaje de error si el formulario no es válido */}
+        {!isFormValid() && (
+          <p className="text-sm text-red-500 text-center mt-2">
+            {getFormStatus()}
+          </p>
+        )}
       </div>
 
-      <Dialog open={showSignatureModal} onOpenChange={setShowSignatureModal}>
-        <DialogContent className="bg-white p-6 rounded-lg shadow-lg max-w-[500px] gap-6">
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Solicitar firma del denunciante
-            </h2>
-
-            <p className="text-sm text-gray-600">
-              Se enviará un resumen de la denuncia al denunciante para que pueda ser revisada y firmada. El proceso pasará a estado <span className="font-medium">Esperando Firma</span> y el formulario no podrá volver a ser editado ¿Deseas continuar?
-            </p>
-
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex gap-2">
-                <InfoIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                <p className="text-sm text-gray-600">
-                  Después de que el denunciante revise y firme la denuncia, serás notificado y se solicitará tu firma para continuar con el proceso.
+      {/* Modal de Confirmación */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Solicitar firma del denunciante</DialogTitle>
+            <DialogDescription className="space-y-3">
+              <p>
+                Se enviará un resumen de la denuncia al denunciante para que pueda ser revisada y firmada.
+                El proceso pasará a estado <span className="font-medium">Esperando Firma</span> y el formulario
+                no podrá volver a ser editado ¿Deseas continuar?
+              </p>
+              <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
+                <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+                <p className="text-sm text-blue-700">
+                  Después de que el denunciante revise y firme la denuncia, serás notificado y se solicitará
+                  tu firma para continuar con el proceso.
                 </p>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowSignatureModal(false)}
-                className="bg-white hover:bg-gray-50"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleConfirmSignature}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Sí, solicitar firma
-              </Button>
-            </div>
-          </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmSignature}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Sí, solicitar firma
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
   );
+};
+
+// Función auxiliar para obtener las etiquetas de los campos
+const getFieldLabel = (key: string): string => {
+  const labels: Record<string, string> = {
+    firstName: 'Nombres',
+    lastName: 'Apellidos',
+    rut: 'RUT',
+    email: 'Correo',
+    position: 'Cargo',
+    department: 'Departamento'
+  };
+  return labels[key] || key;
 }; 

@@ -1,31 +1,73 @@
+export interface AccusedPerson {
+  firstName: string;
+  lastName: string;
+  position: string;
+  department: string;
+  rut: string;
+  email: string;
+}
+
 export interface AccusedFormData {
-  accusedFirstName?: string;
-  accusedLastName?: string;
-  accusedRut?: string;
-  accusedEmail?: string;
-  accusedPosition?: string;
-  accusedDepartment?: string;
-  accusedList?: AccusedPerson[];
+  accusedList: AccusedPerson[];
+  accused: AccusedPerson;
+}
+
+export interface InitialData extends AccusedFormData {
   employerId: string;
   accusedId: string;
 }
 
-export interface AccusedPerson {
-  fullName: string;
-  rut: string;
-  email: string;
-  position: string;
-  department: string;
-}
-
-export const defaultAccusedFormData: AccusedFormData = {
-  accusedFirstName: '',
-  accusedLastName: '',
-  accusedRut: '',
-  accusedEmail: '',
-  accusedPosition: '',
-  accusedDepartment: '',
+export const defaultAccusedFormData: InitialData = {
   accusedList: [],
+  accused: {
+    firstName: '',
+    lastName: '',
+    position: '',
+    department: '',
+    rut: '',
+    email: ''
+  },
   employerId: 'select',
   accusedId: 'select'
-}; 
+};
+
+export interface PersonField {
+  name: keyof AccusedPerson;
+  label: string;
+  type?: string;
+  placeholder: string;
+}
+
+export const personFields: PersonField[] = [
+  {
+    name: 'firstName',
+    label: 'Nombres',
+    placeholder: 'ej: Juan Pablo'
+  },
+  {
+    name: 'lastName',
+    label: 'Apellidos',
+    placeholder: 'ej: López González'
+  },
+  {
+    name: 'rut',
+    label: 'RUT',
+    placeholder: 'ej: 18.456.987-0'
+  },
+  {
+    name: 'email',
+    label: 'Correo',
+    type: 'email',
+    placeholder: 'ej: jplopezg@email.com'
+  },
+  {
+    name: 'position',
+    label: 'Cargo',
+    placeholder: 'ej: Desarrollador'
+  },
+  {
+    name: 'department',
+    label: 'Departamento/Área',
+    placeholder: 'ej: Depto informática'
+  }
+]; 

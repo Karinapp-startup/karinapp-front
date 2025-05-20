@@ -1,80 +1,93 @@
 "use client";
 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { EmployerFormData } from "@/interfaces/complaints/forms/employer";
+import { StepProps } from "@/interfaces/complaints/forms/forms";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { EmployerFormData, defaultEmployerFormData } from "@/interfaces/complaints/forms/employer";
-import { StepProps } from "@/interfaces/complaints/forms";
-import { useState, useEffect } from "react";
+import { useEmployerFormValidation } from "../complements/hooks/useEmployerFormValidation";
+import { validateEmployerForm } from "../complements/utils/validations";
 import { employers } from "../complements/data/mockData";
+import { EmployerFormValidation } from "../complements/hooks/useEmployerFormValidation";
 
-interface Props extends Omit<StepProps, 'onNext'> {
+interface Props {
   defaultValues: EmployerFormData;
   onNext: (data: EmployerFormData) => void;
+  onBack?: () => void;
+  validation: EmployerFormValidation;
 }
 
-export const EmployerForm = ({ onNext, defaultValues }: Props) => {
-  const [formData, setFormData] = useState<EmployerFormData>({
-    ...defaultEmployerFormData,
-    employer: '',
-    date: defaultValues?.date || new Date()
-  });
+interface Employer {
+  id: string;
+  name: string;
+}
 
-  const [isValid, setIsValid] = useState(false);
+export const EmployerForm = ({ defaultValues, onNext, onBack, validation }: Props) => {
+  const {
+    formData,
+    errors,
+    touched,
+    isValid,
+    handleChange,
+    handleBlur,
+    validateForm
+  } = validation;
 
-  useEffect(() => {
-    setIsValid(formData.employer !== '');
-  }, [formData.employer]);
-
-  const handleEmployerChange = (value: string) => {
-    const updatedData = {
-      ...formData,
-      employer: value
-    };
-    setFormData(updatedData);
-    onNext(updatedData);
+  const handleSelectChange = (value: string) => {
+    handleChange('employer', value);
   };
 
-  const handleDateChange = (date: Date | undefined) => {
-    const today = new Date();
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      handleChange('date', date);
+    }
+  };
 
-    if (date && date <= today) {
-      const updatedData = {
-        ...formData,
-        date
-      };
-      setFormData(updatedData);
-      onNext(updatedData);
+  const handleNext = () => {
+    console.log('EmployerForm - handleNext called');
+    console.log('Form data:', formData);
+    console.log('Is valid:', isValid);
+
+    if (validateForm()) {
+      console.log('Form is valid, calling onNext');
+      onNext(formData);
     }
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Selección de empleador</h2>
+      <h2 className="text-xl font-semibold text-gray-900">Datos del Empleador</h2>
 
       <div className="space-y-4 w-full">
         <div className="space-y-2">
-          <Label className="text-sm text-gray-600">Selecciona un empleador</Label>
+          <Label className="text-sm text-gray-600">
+            Selecciona un empleador
+            <span className="text-red-500 ml-1">*</span>
+          </Label>
           <div className="relative">
             <Select
               value={formData.employer}
-              onValueChange={handleEmployerChange}
+              onValueChange={handleSelectChange}
             >
               <SelectTrigger className="w-full h-10 bg-white border border-gray-200 rounded-md text-sm">
-                <SelectValue placeholder="Selecciona un empleador de la lista" />
+                <SelectValue placeholder="Selecciona un empleador" />
               </SelectTrigger>
               <SelectContent
                 className="bg-white w-full"
                 position="popper"
                 sideOffset={4}
               >
-                {employers.map((employer) => (
+                <SelectItem value="select" disabled>
+                  Selecciona un empleador
+                </SelectItem>
+                {employers.map((employer: Employer) => (
                   <SelectItem
                     key={employer.id}
                     value={employer.id}
@@ -91,6 +104,7 @@ export const EmployerForm = ({ onNext, defaultValues }: Props) => {
         <div className="space-y-2">
           <Label className="text-sm text-gray-600">
             Fecha de ingreso de la denuncia
+            <span className="text-red-500 ml-1">*</span>
           </Label>
           <Popover>
             <PopoverTrigger asChild>
@@ -115,15 +129,34 @@ export const EmployerForm = ({ onNext, defaultValues }: Props) => {
               <Calendar
                 mode="single"
                 selected={formData.date}
-                onSelect={handleDateChange}
+                onSelect={handleDateSelect}
                 initialFocus
                 locale={es}
                 className="bg-white rounded-md border-0"
-                disabled={(date) => date > new Date()}
+                disabled={(date: Date) => date > new Date()}
               />
             </PopoverContent>
           </Popover>
         </div>
+      </div>
+
+      <div className="flex justify-between mt-6">
+        <Button
+          variant="outline"
+          onClick={onBack}
+          className="text-gray-700 border border-gray-300 flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Atrás
+        </Button>
+
+        <Button
+          onClick={handleNext}
+          disabled={!isValid}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          Siguiente
+        </Button>
       </div>
     </div>
   );
