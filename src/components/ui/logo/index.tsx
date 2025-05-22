@@ -22,7 +22,7 @@ export function Logo() {
       <div className={styles.logoContainer}>
         <Image
           src="/logo.svg"
-          alt="Karin App Logo"
+          alt="KarinApp Logo"
           width={32}
           height={32}
           className={styles.logo}
@@ -41,7 +41,7 @@ export function Logo() {
           repeatType: "reverse"
         }}
       >
-        Karin App
+        KarinApp
       </motion.span>
     </motion.div>
   );

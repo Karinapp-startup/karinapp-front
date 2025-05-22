@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { RootLayoutClient } from "./layout.client";
 import { Toaster } from 'sonner';
-import { AuthProvider } from "@/providers/AuthProvider";
+import { Providers } from "@/providers";
+import { PrivateRoute } from "@/components/auth/PrivateRoute";
+import { RootLayoutClient } from "./layout.client";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Karin App",
+  title: "KarinApp",
   description: "Sistema de gestión de denuncias",
 };
 
@@ -17,13 +18,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  console.log('RootLayout - Rendering');
+
   return (
     <html lang="es">
       <body className={inter.className}>
-        <AuthProvider>
-          <RootLayoutClient inter={inter}>{children}</RootLayoutClient>
-        </AuthProvider>
-        <Toaster richColors position="top-right" />
+        <Providers>
+          <RootLayoutClient inter={inter}>
+            <PrivateRoute>
+              {children}
+            </PrivateRoute>
+          </RootLayoutClient>
+          <Toaster richColors position="top-right" />
+        </Providers>
       </body>
     </html>
   );

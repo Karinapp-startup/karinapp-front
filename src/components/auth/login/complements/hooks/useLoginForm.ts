@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from 'react';
-import { LoginFormData, LoginFormState } from '@/interfaces/auth/login';
+import { LoginFormData, LoginFormState, LoginFormErrors } from '@/interfaces/auth/login';
 import { VALIDATION_RULES } from '../data/constants';
 
 const initialFormData: LoginFormData = {
@@ -26,7 +26,7 @@ export const useLoginForm = () => {
 
   const validateField = useCallback((name: keyof LoginFormData, value: string | boolean): string => {
     console.log('Validando campo:', name, 'valor:', value);
-    
+
     if (name === 'remember') return '';
 
     if (typeof value === 'string' && !value.trim()) {
@@ -60,7 +60,7 @@ export const useLoginForm = () => {
       VALIDATION_RULES.EMAIL.PATTERN.test(data.email) &&
       data.password.length >= VALIDATION_RULES.PASSWORD.MIN_LENGTH
     );
-    
+
     console.log('Validación del formulario:', {
       emailNotEmpty: data.email.trim() !== '',
       passwordNotEmpty: data.password.trim() !== '',
@@ -85,12 +85,12 @@ export const useLoginForm = () => {
       };
 
       const error = validateField(name as keyof LoginFormData, newValue);
-      const newErrors = { ...prev.errors };
-      
+      const newErrors: LoginFormErrors = { ...prev.errors };
+
       if (error) {
-        newErrors[name] = error;
+        newErrors[name as keyof LoginFormData] = error;
       } else {
-        delete newErrors[name];
+        delete newErrors[name as keyof LoginFormData];
       }
 
       const isValid = validateForm(newFormData);
@@ -117,15 +117,15 @@ export const useLoginForm = () => {
   const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     console.log('Campo perdió foco:', name, 'valor:', value);
-    
+
     setState(prev => {
       const error = validateField(name as keyof LoginFormData, value);
-      const newErrors = { ...prev.errors };
-      
+      const newErrors: LoginFormErrors = { ...prev.errors };
+
       if (error) {
-        newErrors[name] = error;
+        newErrors[name as keyof LoginFormData] = error;
       } else {
-        delete newErrors[name];
+        delete newErrors[name as keyof LoginFormData];
       }
 
       return {

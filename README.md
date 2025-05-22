@@ -1,4 +1,4 @@
-# Karin App
+# KarinApp
 
 Sistema de gestión de denuncias desarrollado con Next.js 14, TypeScript y Tailwind CSS.
 

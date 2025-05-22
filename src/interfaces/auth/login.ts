@@ -1,7 +1,24 @@
 export interface LoginFormData {
   email: string;
   password: string;
-  remember?: boolean;
+  remember: boolean;
+}
+
+export interface LoginFormErrors {
+  [key: string]: string;
+}
+
+export interface LoginFormTouched {
+  email: boolean;
+  password: boolean;
+  remember: boolean;
+}
+
+export interface LoginFormState {
+  formData: LoginFormData;
+  errors: LoginFormErrors;
+  touched: LoginFormTouched;
+  isValid: boolean;
 }
 
 export type UserType = 'legalRep' | 'legalAdmin' | 'garageAdmin' | 'companyAdmin';
@@ -31,11 +48,4 @@ export interface LoginResponse {
   accessToken: string;
   idToken: string;
   refreshToken: string;
-}
-
-export interface LoginFormState {
-  formData: LoginFormData;
-  errors: Partial<Record<keyof LoginFormData, string>>;
-  touched: Record<keyof LoginFormData, boolean>;
-  isValid: boolean;
 } 

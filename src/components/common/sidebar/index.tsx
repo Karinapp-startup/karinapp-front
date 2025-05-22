@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useAuthService } from "@/hooks/useAuthService";
+import { useAppSelector } from "@/store/hooks";
 import {
   HomeIcon,
   FileTextIcon,
@@ -40,6 +42,8 @@ interface SidebarProps {
 export const Sidebar = ({ className }: SidebarProps) => {
   const router = useRouter();
   const pathname = usePathname();
+  const { signOut } = useAuthService();
+  const user = useAppSelector((state) => state.auth.user);
   const [isLoading, setIsLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -51,6 +55,26 @@ export const Sidebar = ({ className }: SidebarProps) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      await signOut();
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInitials = () => {
+    if (!user?.email) return 'U';
+    return user.email
+      .split('@')[0]
+      .slice(0, 2)
+      .toUpperCase();
   };
 
   return (
@@ -86,7 +110,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
             <div className={styles.logoContainer}>
               <Shield className={cn("h-6 w-6 text-white", styles.logo)} />
             </div>
-            {!isCollapsed && <span className={styles.appName}>Karin App</span>}
+            {!isCollapsed && <span className={styles.appName}>KarinApp</span>}
           </div>
         </div>
 
@@ -116,12 +140,12 @@ export const Sidebar = ({ className }: SidebarProps) => {
               isCollapsed && "justify-center"
             )}>
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-medium">
-                JG
+                {getInitials()}
               </div>
               {!isCollapsed && (
                 <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-gray-900">Juan Pablo González</span>
-                  <span className="text-xs text-gray-500">jp@example.com</span>
+                  <span className="text-sm font-medium text-gray-900">{user?.email?.split('@')[0] || 'Usuario'}</span>
+                  <span className="text-xs text-gray-500">{user?.email || ''}</span>
                 </div>
               )}
             </DropdownMenuTrigger>
@@ -136,8 +160,8 @@ export const Sidebar = ({ className }: SidebarProps) => {
             >
               {isCollapsed && (
                 <div className="px-2 py-1.5 bg-white">
-                  <p className="text-sm font-medium text-gray-900">Juan Pablo González</p>
-                  <p className="text-xs text-gray-500 truncate">jp@example.com</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.email?.split('@')[0] || 'Usuario'}</p>
+                  <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
                 </div>
               )}
               <DropdownMenuSeparator className="bg-gray-100" />
@@ -154,12 +178,17 @@ export const Sidebar = ({ className }: SidebarProps) => {
 
               <DropdownMenuItem
                 className="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-red-50 text-red-600 hover:text-red-700 bg-white"
-                onClick={() => {
-                  console.log("Cerrar sesión");
-                }}
+                onClick={handleLogout}
+                disabled={isLoading}
               >
-                <LogOut size={16} />
-                <span className="text-sm font-medium">Cerrar Sesión</span>
+                {isLoading ? (
+                  <Spinner className="h-4 w-4" />
+                ) : (
+                  <LogOut size={16} />
+                )}
+                <span className="text-sm font-medium">
+                  {isLoading ? 'Cerrando sesión...' : 'Cerrar Sesión'}
+                </span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
