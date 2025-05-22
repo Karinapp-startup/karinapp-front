@@ -2,20 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LoginState } from '../types/login';
 import { useLoginForm } from './useLoginForm';
-import { signIn } from '../utils/cognito';
-import { ERROR_MESSAGES } from '../data/constants';
+import { useAuthService } from '@/hooks/useAuthService';
 import { toast } from 'sonner';
 
 export const useLogin = () => {
   const router = useRouter();
-  const [state, setState] = useState<LoginState>({
-    isLoading: false,
-    isSuccess: false,
-    error: null
-  });
-
+  const { signIn } = useAuthService();
+  const [isLoading, setIsLoading] = useState(false);
+  
   const {
     formData,
     errors,
@@ -25,46 +20,23 @@ export const useLogin = () => {
     handleBlur
   } = useLoginForm();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isValid) {
-      toast.error('Por favor, revisa los campos del formulario');
-      return;
-    }
-
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-
+  const handleSubmit = async () => {
     try {
-      const response = await signIn(formData);
-      
-      // Guardar tokens en localStorage si remember está activo
-      if (formData.remember) {
-        localStorage.setItem('accessToken', response.accessToken);
-        localStorage.setItem('refreshToken', response.refreshToken);
-      } else {
-        sessionStorage.setItem('accessToken', response.accessToken);
-        sessionStorage.setItem('refreshToken', response.refreshToken);
+      setIsLoading(true);
+
+      if (!isValid) {
+        toast.error('Por favor, complete todos los campos requeridos');
+        return;
       }
 
-      setState(prev => ({ ...prev, isSuccess: true }));
+      await signIn(formData);
       toast.success('Inicio de sesión exitoso');
-      
-      // Redirigir según el tipo de usuario
-      router.push(response.userType === 'representative' ? '/dashboard' : '/complaints');
+      router.push('/');
     } catch (error: any) {
-      let errorMessage = ERROR_MESSAGES.NETWORK_ERROR;
-      
-      if (error.code === 'UserNotConfirmedException') {
-        errorMessage = ERROR_MESSAGES.USER_NOT_CONFIRMED;
-      } else if (error.code === 'NotAuthorizedException') {
-        errorMessage = ERROR_MESSAGES.INVALID_CREDENTIALS;
-      }
-
-      setState(prev => ({ ...prev, error: errorMessage }));
-      toast.error(errorMessage);
+      console.error('Error en login:', error);
+      toast.error(error.message || 'Error al iniciar sesión');
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setIsLoading(false);
     }
   };
 
@@ -72,9 +44,8 @@ export const useLogin = () => {
     formData,
     errors,
     touched,
-    isLoading: state.isLoading,
-    isSuccess: state.isSuccess,
-    error: state.error,
+    isLoading,
+    isValid: isValid || false,
     handleChange,
     handleBlur,
     handleSubmit

@@ -1,0 +1,34 @@
+.errorContainer {
+  @apply min-h-screen bg-gradient-to-b from-gray-50 to-gray-100;
+}
+
+.errorContent {
+  @apply max-w-md mx-auto p-8 rounded-2xl bg-white shadow-lg;
+}
+
+.errorTitle {
+  @apply text-4xl font-bold text-gray-900 mb-4;
+}
+
+.errorDescription {
+  @apply text-lg text-gray-600 mb-8;
+}
+
+.errorActions {
+  @apply flex flex-col sm:flex-row gap-4 justify-center;
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.animateBounce {
+  animation: bounce-slow 3s infinite;
+} 

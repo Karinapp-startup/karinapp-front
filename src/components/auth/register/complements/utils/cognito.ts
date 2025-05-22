@@ -7,35 +7,21 @@ const userPool = new CognitoUserPool({
   ClientId: COGNITO_CONFIG.CLIENT_ID!
 });
 
-export const signUp = async (formData: RegisterFormData) => {
-  // Validar que los campos requeridos existan
-  if (!formData.firstName || !formData.lastName || !formData.email) {
-    throw new Error('Faltan campos requeridos');
-  }
-
-  const baseAttributes = [
-    new CognitoUserAttribute({ Name: 'email', Value: formData.email }),
-    new CognitoUserAttribute({ Name: 'custom:firstName', Value: formData.firstName }),
-    new CognitoUserAttribute({ Name: 'custom:lastName', Value: formData.lastName }),
-    new CognitoUserAttribute({ Name: 'custom:userType', Value: formData.registerType })
+export const signUp = async (formData: RegisterFormData): Promise<any> => {
+  const attributeList = [
+    new CognitoUserAttribute({
+      Name: 'email',
+      Value: formData.email
+    }),
+    new CognitoUserAttribute({
+      Name: 'given_name',
+      Value: formData.firstName
+    }),
+    new CognitoUserAttribute({
+      Name: 'family_name',
+      Value: formData.lastName
+    })
   ];
-
-  // Atributos condicionales para representante legal
-  const legalRepAttributes = formData.registerType === 'legalRep' && formData.documentId
-    ? [
-      new CognitoUserAttribute({ Name: 'custom:documentId', Value: formData.documentId }),
-      new CognitoUserAttribute({ Name: 'custom:acceptTerms', Value: formData.acceptTerms.toString() }),
-      new CognitoUserAttribute({ Name: 'custom:acceptPrivacy', Value: formData.acceptPrivacyPolicy.toString() })
-    ]
-    : [];
-
-  // Atributos opcionales
-  const optionalAttributes = [
-    formData.phone && new CognitoUserAttribute({ Name: 'phone_number', Value: formData.phone }),
-    formData.position && new CognitoUserAttribute({ Name: 'custom:position', Value: formData.position })
-  ].filter((attr): attr is CognitoUserAttribute => !!attr);
-
-  const attributeList = [...baseAttributes, ...legalRepAttributes, ...optionalAttributes];
 
   return new Promise((resolve, reject) => {
     userPool.signUp(
@@ -45,7 +31,8 @@ export const signUp = async (formData: RegisterFormData) => {
       [],
       (err, result) => {
         if (err) {
-          reject(err);
+          console.error('Error en signUp:', err);
+          reject(new Error(err.message || 'Error al registrar usuario'));
           return;
         }
         resolve(result);

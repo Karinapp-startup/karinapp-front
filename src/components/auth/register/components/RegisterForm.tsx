@@ -24,8 +24,13 @@ export function RegisterForm() {
     handleTypeChange,
   } = useRegister();
 
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmit();
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <div className="mb-6">
         <div className="flex gap-4 p-1 bg-gray-100 rounded-lg">
           <button
@@ -167,16 +172,16 @@ export function RegisterForm() {
 
       <Button
         type="submit"
-        className="w-full bg-[#1e1b4b] hover:bg-[#1e1b4b]/90 text-white py-2.5 rounded-lg"
-        disabled={isLoading}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        disabled={isLoading || Object.keys(errors).length > 0}
       >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Iniciando sesión...
+            Registrando...
           </>
         ) : (
-          'Iniciar sesión'
+          'Registrarse'
         )}
       </Button>
 

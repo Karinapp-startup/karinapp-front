@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthService } from "@/hooks/useAuthService";
 import { useLogin } from "../complements/hooks/useLogin";
 import { Loader2 } from "lucide-react";
 
@@ -14,28 +15,52 @@ export function LoginForm() {
     errors,
     touched,
     isLoading,
-    isSuccess,
+    isValid,
     handleChange,
     handleBlur,
-    handleSubmit,
+    handleSubmit
   } = useLogin();
 
+  const { isAuthenticated, user, signOut, error } = useAuthService();
+
+  // Si ya está autenticado, mostrar información
+  if (isAuthenticated && user) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold">Bienvenido {user.profile.email}</h2>
+        <Button onClick={() => signOut()}>Cerrar sesión</Button>
+      </div>
+    );
+  }
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSubmit();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1e1b4b]"></div>
+        <span className="ml-3 text-gray-700">Cargando...</span>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
-          <Label htmlFor="email" className="text-sm text-gray-700">
-            Correo electrónico
-          </Label>
+          <Label htmlFor="email">Correo electrónico</Label>
           <Input
             id="email"
             name="email"
             type="email"
-            placeholder="Ingrese correo electrónico..."
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
             value={formData.email}
             onChange={handleChange}
             onBlur={handleBlur}
+            className={errors.email && touched.email ? "border-red-500" : ""}
+            required
           />
           {touched.email && errors.email && (
             <p className="mt-1 text-sm text-red-500">{errors.email}</p>
@@ -43,18 +68,16 @@ export function LoginForm() {
         </div>
 
         <div>
-          <Label htmlFor="password" className="text-sm text-gray-700">
-            Contraseña
-          </Label>
+          <Label htmlFor="password">Contraseña</Label>
           <Input
             id="password"
             name="password"
             type="password"
-            placeholder="Ingrese contraseña..."
-            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"
             value={formData.password}
             onChange={handleChange}
             onBlur={handleBlur}
+            className={errors.password && touched.password ? "border-red-500" : ""}
+            required
           />
           {touched.password && errors.password && (
             <p className="mt-1 text-sm text-red-500">{errors.password}</p>
@@ -67,7 +90,7 @@ export function LoginForm() {
               id="remember"
               name="remember"
               checked={formData.remember}
-              onCheckedChange={(checked) => 
+              onCheckedChange={(checked) =>
                 handleChange({ target: { name: 'remember', value: checked } } as any)
               }
             />
@@ -81,18 +104,23 @@ export function LoginForm() {
         </div>
       </div>
 
-      {isSuccess && (
-        <Alert className="bg-green-50 text-green-700 border-green-200">
+      {error && (
+        <Alert className="bg-red-50 text-red-700 border-red-200">
           <AlertDescription>
-            Inicio de sesión exitoso
+            {error.message || 'Ha ocurrido un error inesperado'}
           </AlertDescription>
         </Alert>
       )}
 
       <Button
         type="submit"
-        className="w-full bg-[#1e1b4b] hover:bg-[#1e1b4b]/90 text-white py-2.5 rounded-lg"
-        disabled={isLoading}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+        disabled={!isValid || isLoading}
+        onClick={() => console.log('🔘 Estado del botón:', {
+          isValid,
+          isLoading,
+          buttonDisabled: !isValid || isLoading
+        })}
       >
         {isLoading ? (
           <>
@@ -112,6 +140,12 @@ export function LoginForm() {
       >
         Ir a Portal de trabajador
       </Button>
+
+      <div className="text-center mt-4">
+        <a href="/auth/register" className="text-sm text-blue-600 hover:text-blue-500">
+          ¿No tienes una cuenta? Regístrate
+        </a>
+      </div>
 
       <div className="text-center mt-4">
         <a href="/sitio-web" className="text-sm text-gray-600 hover:text-gray-900">

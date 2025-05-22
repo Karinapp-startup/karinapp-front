@@ -1,29 +1,35 @@
-export type RegisterType = 'legalRep' | 'legalAdmin' | 'garageAdmin' | 'companyAdmin';
+export type UserType = 'legalRep' | 'legalAdmin' | 'garageAdmin' | 'companyAdmin';
 
 export interface RegisterFormData {
   // Personal information
   firstName: string;
   lastName: string;
-  documentId?: string;
-  documentIdDv?: string;
+  documentId: string;      // RUT number without DV
+  documentIdDv: string;    // RUT verification digit
   email: string;
   password: string;
   phone?: string;
   position?: string;
+  userType: UserType;
 
-  // Company information (optional, for legal representatives)
-  company?: {
-    id?: string;
-    name: string;
-    documentId: number;
-    documentIdDv: string;
-    documentType: string;
-  };
+  // Terms acceptance (only for legalRep)
+  acceptTerms?: boolean;
+  acceptPrivacy?: boolean;
+}
 
-  // Terms and preferences
-  acceptTerms: boolean;
-  acceptPrivacyPolicy: boolean;
-  registerType: RegisterType;
+export interface RegisterFormState {
+  formData: RegisterFormData;
+  errors: Partial<Record<keyof RegisterFormData, string>>;
+  touched: Record<keyof RegisterFormData, boolean>;
+  isValid: boolean;
+}
+
+export interface RegisterResponse {
+  // Response from Cognito
+  userSub: string;
+  userConfirmed: boolean;
+  email: string;
+  userType: UserType;
 }
 
 export interface RegisterValidation {

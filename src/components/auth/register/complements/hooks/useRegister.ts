@@ -1,25 +1,25 @@
 "use client";
 
 import { useState } from 'react';
-import { CognitoUserPool, CognitoUserAttribute } from 'amazon-cognito-identity-js';
-import { RegisterState, RegisterType, RegisterFormData } from '../types/register';
+import { useRouter } from 'next/navigation';
+import { RegisterFormData, UserType } from '@/interfaces/auth/register';
 import { useRegisterForm } from './useRegisterForm';
+import { signUp } from '../utils/cognito';
 import { toast } from 'sonner';
 
-const COGNITO_CONFIG = {
-  UserPoolId: process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!,
-  ClientId: process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!
+// Mapeamos los tipos de registro a los tipos de usuario de Cognito
+const USER_TYPE_MAP = {
+  user: 'garageAdmin' as UserType,
+  representative: 'legalRep' as UserType
 };
 
-const userPool = new CognitoUserPool(COGNITO_CONFIG);
+type RegisterType = keyof typeof USER_TYPE_MAP;
 
 export const useRegister = () => {
-  const [state, setState] = useState<RegisterState>({
-    isLoading: false,
-    isSuccess: false,
-    error: null,
-    registerType: 'user'
-  });
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [registerType, setRegisterType] = useState<RegisterType>('user');
 
   const {
     formData,
@@ -31,78 +31,43 @@ export const useRegister = () => {
   } = useRegisterForm();
 
   const handleTypeChange = (type: RegisterType) => {
-    setState(prev => ({ ...prev, registerType: type }));
+    setRegisterType(type);
   };
 
-  const signUp = async (formData: RegisterFormData, userAttributes: CognitoUserAttribute[]) => {
-    return new Promise((resolve, reject) => {
-      userPool.signUp(
-        formData.email,
-        formData.password,
-        userAttributes,
-        [],
-        (err, result) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve(result);
-        }
-      );
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!isValid) {
-      toast.error('Por favor, revisa los campos del formulario');
-      return;
-    }
-
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-
+  const handleSubmit = async () => {
     try {
-      // Atributos base que todo usuario debe tener
-      const baseAttributes = [
-        new CognitoUserAttribute({ Name: 'email', Value: formData.email }),
-        new CognitoUserAttribute({ Name: 'custom:terms_accepted', Value: 'true' })
-      ];
+      setIsLoading(true);
 
-      // Atributos específicos según el tipo de usuario
-      const specificAttributes = state.registerType === 'representative' 
-        ? [
-            new CognitoUserAttribute({ Name: 'custom:user_type', Value: 'representative' }),
-            new CognitoUserAttribute({ Name: 'custom:nombres', Value: formData.nombres! }),
-            new CognitoUserAttribute({ Name: 'custom:apellidos', Value: formData.apellidos! }),
-            new CognitoUserAttribute({ Name: 'custom:rut', Value: formData.rut! })
-          ]
-        : [
-            new CognitoUserAttribute({ Name: 'custom:user_type', Value: 'user' })
-          ];
-
-      const allAttributes = [...baseAttributes, ...specificAttributes];
-
-      await signUp(formData, allAttributes);
-      
-      setState(prev => ({ ...prev, isSuccess: true }));
-      toast.success('Registro exitoso. Por favor revisa tu correo para confirmar tu cuenta.');
-    } catch (error: any) {
-      let errorMessage = 'Error al registrar usuario';
-      
-      // Manejar errores específicos de Cognito
-      if (error.code === 'UsernameExistsException') {
-        errorMessage = 'El correo electrónico ya está registrado';
-      } else if (error.code === 'InvalidPasswordException') {
-        errorMessage = 'La contraseña no cumple con los requisitos';
-      } else if (error.code === 'InvalidParameterException') {
-        errorMessage = 'Uno o más campos son inválidos';
+      if (!isValid) {
+        toast.error('Por favor, corrige los errores del formulario');
+        return;
       }
 
-      setState(prev => ({ ...prev, error: errorMessage }));
-      toast.error(errorMessage);
+      // Mapeamos los campos del formulario a la estructura esperada por RegisterFormData
+      const mappedFormData: RegisterFormData = {
+        firstName: formData.nombres || '',
+        lastName: formData.apellidos || '',
+        documentId: formData.rut ? formData.rut.split('-')[0] : '',
+        documentIdDv: formData.rut ? formData.rut.split('-')[1] : '',
+        email: formData.email,
+        password: formData.password,
+        userType: USER_TYPE_MAP[registerType],
+        acceptTerms: formData.terms,
+        acceptPrivacy: formData.terms // Asumimos que los términos incluyen la política de privacidad
+      };
+
+      const response = await signUp(mappedFormData);
+
+      if (response) {
+        setIsSuccess(true);
+        toast.success('Registro exitoso. Por favor verifica tu correo.');
+        router.push('/auth/verify-email');
+      }
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+      toast.error(error.message || 'Error al registrar usuario');
     } finally {
-      setState(prev => ({ ...prev, isLoading: false }));
+      setIsLoading(false);
     }
   };
 
@@ -110,13 +75,12 @@ export const useRegister = () => {
     formData,
     errors,
     touched,
-    isLoading: state.isLoading,
-    isSuccess: state.isSuccess,
-    error: state.error,
+    isLoading,
+    isSuccess,
+    registerType,
     handleChange,
     handleBlur,
     handleSubmit,
-    registerType: state.registerType,
     handleTypeChange
   };
 }; 

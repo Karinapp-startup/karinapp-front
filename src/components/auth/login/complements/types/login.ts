@@ -5,10 +5,19 @@ export interface LoginState {
 }
 
 export interface LoginFormState {
-  formData: LoginFormData;
-  errors: Partial<Record<keyof LoginFormData, string>>;
-  touched: Record<keyof LoginFormData, boolean>;
-  isValid: boolean;
+  email: string;
+  password: string;
+  remember: boolean;
+}
+
+export interface LoginFormErrors {
+  email?: string;
+  password?: string;
+}
+
+export interface LoginFormTouched {
+  email: boolean;
+  password: boolean;
 }
 
 export interface LoginFormData {

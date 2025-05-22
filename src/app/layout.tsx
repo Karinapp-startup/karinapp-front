@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { RootLayoutClient } from "./layout.client";
 import { Toaster } from 'sonner';
+import { AuthProvider } from "@/providers/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,9 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={inter.className}>
-        <RootLayoutClient inter={inter}>{children}</RootLayoutClient>
+        <AuthProvider>
+          <RootLayoutClient inter={inter}>{children}</RootLayoutClient>
+        </AuthProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

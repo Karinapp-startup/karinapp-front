@@ -1,51 +1,68 @@
 import { RegisterFormData } from '@/interfaces/auth/register';
 import { VALIDATION_RULES, ERROR_MESSAGES } from '../data/constants';
 
-export const validateRegisterForm = (formData: RegisterFormData) => {
-  const errors: Partial<Record<keyof RegisterFormData, string>> = {};
-
-  // Personal information validations
-  if (!formData.firstName?.trim()) {
-    errors.firstName = ERROR_MESSAGES.REQUIRED;
-  } else if (formData.firstName.length < VALIDATION_RULES.NAME.MIN_LENGTH) {
-    errors.firstName = ERROR_MESSAGES.NAME_MIN_LENGTH(VALIDATION_RULES.NAME.MIN_LENGTH);
+export const validateField = (
+  field: keyof RegisterFormData,
+  value: string | boolean
+): string => {
+  if (typeof value === 'string' && !value.trim()) {
+    return ERROR_MESSAGES.REQUIRED;
   }
 
-  if (!formData.lastName?.trim()) {
-    errors.lastName = ERROR_MESSAGES.REQUIRED;
-  } else if (formData.lastName.length < VALIDATION_RULES.NAME.MIN_LENGTH) {
-    errors.lastName = ERROR_MESSAGES.LASTNAME_MIN_LENGTH(VALIDATION_RULES.NAME.MIN_LENGTH);
+  switch (field) {
+    case 'firstName':
+    case 'lastName':
+      if (typeof value === 'string' && value.length < VALIDATION_RULES.NAME.MIN_LENGTH) {
+        return `Mínimo ${VALIDATION_RULES.NAME.MIN_LENGTH} caracteres`;
+      }
+      if (typeof value === 'string' && value.length > VALIDATION_RULES.NAME.MAX_LENGTH) {
+        return `Máximo ${VALIDATION_RULES.NAME.MAX_LENGTH} caracteres`;
+      }
+      break;
+
+    case 'documentId':
+      if (typeof value === 'string' && !VALIDATION_RULES.DOCUMENT_ID.PATTERN.test(value)) {
+        return 'RUT inválido';
+      }
+      break;
+
+    case 'email':
+      if (typeof value === 'string' && !VALIDATION_RULES.EMAIL.PATTERN.test(value)) {
+        return 'Correo electrónico inválido';
+      }
+      break;
+
+    case 'password':
+      if (typeof value === 'string') {
+        if (value.length < VALIDATION_RULES.PASSWORD.MIN_LENGTH) {
+          return `Mínimo ${VALIDATION_RULES.PASSWORD.MIN_LENGTH} caracteres`;
+        }
+        if (!VALIDATION_RULES.PASSWORD.PATTERN.test(value)) {
+          return 'La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial';
+        }
+      }
+      break;
+
+    case 'acceptTerms':
+      if (!value) {
+        return 'Debes aceptar los términos y condiciones';
+      }
+      break;
   }
 
-  if (formData.registerType === 'legalRep') {
-    if (!formData.documentId?.trim()) {
-      errors.documentId = ERROR_MESSAGES.REQUIRED;
-    } else if (!VALIDATION_RULES.DOCUMENT_ID.PATTERN.test(formData.documentId)) {
-      errors.documentId = ERROR_MESSAGES.INVALID_DOCUMENT_ID;
+  return '';
+};
+
+export const validateRegisterForm = (formData: RegisterFormData): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  Object.keys(formData).forEach((key) => {
+    const field = key as keyof RegisterFormData;
+    const error = validateField(field, formData[field]);
+    if (error) {
+      errors[field] = error;
     }
-  }
-
-  if (!formData.email?.trim()) {
-    errors.email = ERROR_MESSAGES.REQUIRED;
-  } else if (!VALIDATION_RULES.EMAIL.PATTERN.test(formData.email)) {
-    errors.email = ERROR_MESSAGES.INVALID_EMAIL;
-  }
-
-  if (!formData.password?.trim()) {
-    errors.password = ERROR_MESSAGES.REQUIRED;
-  } else if (!VALIDATION_RULES.PASSWORD.PATTERN.test(formData.password)) {
-    errors.password = ERROR_MESSAGES.INVALID_PASSWORD;
-  }
-
-  // Terms validations (solo para representantes legales)
-  if (formData.registerType === 'legalRep') {
-    if (!formData.acceptTerms) {
-      errors.acceptTerms = ERROR_MESSAGES.TERMS_REQUIRED;
-    }
-    if (!formData.acceptPrivacyPolicy) {
-      errors.acceptPrivacyPolicy = ERROR_MESSAGES.PRIVACY_REQUIRED;
-    }
-  }
+  });
 
   return errors;
 }; 

@@ -1,7 +1,7 @@
 export interface LoginFormData {
   email: string;
   password: string;
-  remember: boolean;
+  remember?: boolean;
 }
 
 export type UserType = 'legalRep' | 'legalAdmin' | 'garageAdmin' | 'companyAdmin';
@@ -28,23 +28,14 @@ export interface UserProfile {
 }
 
 export interface LoginResponse {
-  // Auth tokens
   accessToken: string;
+  idToken: string;
   refreshToken: string;
-  expiresIn: number;
+}
 
-  // User information
-  userType: UserType;
-  profile: UserProfile;
-
-  // Session metadata
-  sessionId: string;
-  lastLogin: string;
-
-  // User preferences
-  settings?: {
-    theme: 'light' | 'dark' | 'system';
-    language: 'es' | 'en';
-    notifications: boolean;
-  };
+export interface LoginFormState {
+  formData: LoginFormData;
+  errors: Partial<Record<keyof LoginFormData, string>>;
+  touched: Record<keyof LoginFormData, boolean>;
+  isValid: boolean;
 } 
