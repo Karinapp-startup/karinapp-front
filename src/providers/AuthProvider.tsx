@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthProvider as OidcProvider } from "react-oidc-context";
-import { COGNITO_AUTH_CONFIG } from "@/config/auth";
+import { COGNITO_CONFIG } from "@/config/auth";
 import { LoadingScreen } from "@/components/common/loading";
 import { ErrorPage } from "@/components/common/error";
 
@@ -11,7 +11,11 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const oidcConfig = {
-    ...COGNITO_AUTH_CONFIG,
+    authority: process.env.NEXT_PUBLIC_COGNITO_AUTHORITY,
+    client_id: COGNITO_CONFIG.ClientId,
+    redirect_uri: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+    response_type: 'code',
+    scope: 'openid profile email',
     onSigninCallback: () => {
       window.history.replaceState({}, document.title, window.location.pathname);
     },

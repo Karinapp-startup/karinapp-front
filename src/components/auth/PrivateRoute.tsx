@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/store/hooks';
 import { Spinner } from '@/components/common/spinner';
+import { useAuth } from "react-oidc-context";
 
 interface PrivateRouteProps {
     children: React.ReactNode;
@@ -13,7 +14,8 @@ const PUBLIC_PATHS = [
     '/complaints/channel',
     '/auth/login',
     '/auth/register',
-    '/auth/forgot-password'
+    '/auth/forgot-password',
+    '/auth/reset-password'
 ];
 
 export const PrivateRoute = ({ children }: PrivateRouteProps) => {
@@ -21,6 +23,7 @@ export const PrivateRoute = ({ children }: PrivateRouteProps) => {
     const pathname = usePathname();
     const [isChecking, setIsChecking] = useState(true);
     const { isAuthenticated, tokens = { accessToken: null } } = useAppSelector((state) => state.auth);
+    const auth = useAuth();
 
     console.log('PrivateRoute - Current State:', {
         pathname,
